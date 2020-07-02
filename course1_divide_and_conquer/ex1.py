@@ -51,26 +51,13 @@ def karatsuba(x: int, y: int) -> int:
     c = y // 10 ** (num_digits // 2)
     d = y % 10 ** (num_digits // 2)
 
-    # if num_digits_x > num_digits_y:
-    #     b = x % 10 ** (num_digits_y)
-    #     a = x // 10 ** (num_digits_y)
-    #     c, d = split_num(y)
-    # elif num_digits_y > num_digits_x:
-    #     b = y % 10 ** (num_digits_x)
-    #     a = y // 10 ** (num_digits_x)
-    #     c, d = split_num(x)
-    # else:
-    #     a, b = split_num(x)
-    #     c, d = split_num(y)
-    #a, b = split_num(x)
-    #c, d = split_num(y)
     ac = karatsuba(a, c)
     bd = karatsuba(b, d)
     abcd = karatsuba(a+b, c+d)
 
     gaus_trick = abcd - ac - bd 
 
-    return (10**(2*(num_digits//2)))*ac + 10**(num_digits // 2)*(gaus_trick) + bd
+    return (10**(2*(num_digits//2))) * ac + 10**(num_digits // 2) * gaus_trick + bd
 
 karatsuba(123, 456)
 
@@ -78,12 +65,17 @@ karatsuba(123, 456)
 assert recursive_mult(1234, 5678) == 1234*5678
 assert recursive_mult(10, 2) == 10*2
 assert recursive_mult(1, 1) == 1*1
-assert recursive_mult(2345679, 234) == 2345679*234, "We assumed that the numbers have the same digit length"
-assert recursive_mult(1111111111111111,22222222222222) == 1111111111111111*22222222222222
+assert recursive_mult(2345679, 234) == 2345679*234
+assert recursive_mult(1111111111111111, 22222222222222) == 1111111111111111*22222222222222
 
 assert karatsuba(1234, 5678) == 1234*5678
 assert karatsuba(10, 2) == 10*2
 assert karatsuba(1, 1) == 1*1
-assert karatsuba(2345679, 234) == 2345679*234, "We assumed that the numbers have the same digit length"
-assert karatsuba(1111111111111111,22222222222222) == 1111111111111111*22222222222222
+assert karatsuba(2345679, 234) == 2345679*234
+assert karatsuba(1111111111111111, 22222222222222) == 1111111111111111*22222222222222
 
+# answer to exercise
+assert karatsuba(3141592653589793238462643383279502884197169399375105820974944592, 2718281828459045235360287471352662497757247093699959574966967627) == \
+3141592653589793238462643383279502884197169399375105820974944592 * 2718281828459045235360287471352662497757247093699959574966967627
+
+karatsuba(3141592653589793238462643383279502884197169399375105820974944592, 2718281828459045235360287471352662497757247093699959574966967627)
