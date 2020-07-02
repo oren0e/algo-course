@@ -44,35 +44,35 @@ def karatsuba(x: int, y: int) -> int:
     if ((x // 10) == 0) or ((y // 10) == 0):
         return x * y
 
-    n = int(math.log10(which_is_longer(x, y)) + 1)
+    num_digits = int(math.log10(which_is_longer(x, y)) + 1)
 
-    num_digits_x = int(math.log10(x) + 1)
-    num_digits_y = int(math.log10(y) + 1)
+    a = x // 10 ** (num_digits // 2)
+    b = x % 10 ** (num_digits // 2)
+    c = y // 10 ** (num_digits // 2)
+    d = y % 10 ** (num_digits // 2)
 
-    if num_digits_x > num_digits_y:
-        b = x % 10 ** (num_digits_y)
-        a = x // 10 ** (num_digits_y)
-        c, d = split_num(y)
-    elif num_digits_y > num_digits_x:
-        b = y % 10 ** (num_digits_x)
-        a = y // 10 ** (num_digits_x)
-        c, d = split_num(x)
-    else:
-        a, b = split_num(x)
-        c, d = split_num(y)
-
+    # if num_digits_x > num_digits_y:
+    #     b = x % 10 ** (num_digits_y)
+    #     a = x // 10 ** (num_digits_y)
+    #     c, d = split_num(y)
+    # elif num_digits_y > num_digits_x:
+    #     b = y % 10 ** (num_digits_x)
+    #     a = y // 10 ** (num_digits_x)
+    #     c, d = split_num(x)
+    # else:
+    #     a, b = split_num(x)
+    #     c, d = split_num(y)
+    #a, b = split_num(x)
+    #c, d = split_num(y)
     ac = karatsuba(a, c)
     bd = karatsuba(b, d)
     abcd = karatsuba(a+b, c+d)
 
     gaus_trick = abcd - ac - bd 
 
+    return (10**(2*(num_digits//2)))*ac + 10**(num_digits // 2)*(gaus_trick) + bd
 
-    # we are assuming that the two numbers have equal number of digits
-    num_digits = int(math.log10(x) + 1)
-    return 10**num_digits*ac + 10**(num_digits // 2)*(gaus_trick) + bd
-
-karatsuba(2345, 1234)
+karatsuba(123, 456)
 
 # test cases
 assert recursive_mult(1234, 5678) == 1234*5678
