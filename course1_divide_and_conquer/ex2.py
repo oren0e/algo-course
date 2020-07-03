@@ -1,6 +1,6 @@
 from typing import List
-arr: List[int] = [1, 3, 5, 2, 4, 6]
-#arr: List[int] = [1, 5, 3, 2, 4, 6]
+#arr: List[int] = [1, 3, 5, 2, 4, 6]
+arr: List[int] = [1, 5, 3, 2, 6, 4]
 
 
 def count_split_inversions(left: List[int], right: List[int]) -> int:
