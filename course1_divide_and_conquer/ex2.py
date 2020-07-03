@@ -20,6 +20,7 @@ def count_and_sort(arr: List[int]) -> List[int]:
     i = 0
     j = 0
     k = 0
+    inversions: List[int] = []
 
     while i < len(left) and j < len(right):
         if left[i] < right[j]:
@@ -28,7 +29,11 @@ def count_and_sort(arr: List[int]) -> List[int]:
         else:
             arr[k] = right[j]
             j += 1
+            inversions.extend([len(left) - i])
         k += 1
+    print(inversions)
+
+count_and_sort(arr)
 
 def count_inversions(arr: List[int]) -> int:
     n = len(arr)
