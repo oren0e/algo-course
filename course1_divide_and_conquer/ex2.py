@@ -1,6 +1,6 @@
 from typing import List
-#arr: List[int] = [1, 3, 5, 2, 4, 6]
-arr: List[int] = [1, 5, 3, 2, 4, 6]
+arr: List[int] = [1, 3, 5, 2, 4, 6]
+#arr: List[int] = [1, 5, 3, 2, 4, 6]
 
 
 def count_split_inversions(left: List[int], right: List[int]) -> int:
@@ -10,9 +10,25 @@ def count_and_sort(arr: List[int]) -> List[int]:
     n = len(arr)
     if n == 1:
         return arr
-    count_and_sort(arr[0:(len(arr)//2)])
-    count_and_sort(arr[(len(arr)//2):])
+    mid = n // 2
+    left = arr[:mid]
+    right = arr[mid:]
 
+    count_and_sort(left)
+    count_and_sort(right)
+
+    i = 0
+    j = 0
+    k = 0
+
+    while i < len(left) and j < len(right):
+        if left[i] < right[j]:
+            arr[k] = left[i]
+            i += 1
+        else:
+            arr[k] = right[j]
+            j += 1
+        k += 1
 
 def count_inversions(arr: List[int]) -> int:
     n = len(arr)
