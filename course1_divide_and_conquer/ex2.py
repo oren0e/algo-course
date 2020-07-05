@@ -51,3 +51,11 @@ arr: List[int] = [1, 3, 5, 2, 4, 6]
 print(f'Array before: {arr}')
 print(f'Number of inversions is: {count_inversions(arr)}')
 print(f'Array after: {arr}')
+
+# answer to exercise
+ex_arr: List[int] = []
+with open('int_array.txt', 'r') as f:
+    for line in f:
+        ex_arr.append(int(line))
+
+print(f'Number of inversions is: {count_inversions(ex_arr)}')
