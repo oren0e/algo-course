@@ -8,6 +8,7 @@ def count_split_inversions(left: List[int], right: List[int]) -> int:
 
 def count_and_sort(arr: List[int]) -> List[int]:
     n = len(arr)
+    temp_arr: List[int] = [0 for _ in range(n)]
     if n == 1:
         return arr
     mid = n // 2
@@ -20,20 +21,30 @@ def count_and_sort(arr: List[int]) -> List[int]:
     i = 0
     j = 0
     k = 0
-    inversions: List[int] = []
+    inversions: int = 0
 
     while i < len(left) and j < len(right):
         if left[i] < right[j]:
-            arr[k] = left[i]
+            temp_arr[k] = left[i]
             i += 1
         else:
-            arr[k] = right[j]
+            temp_arr[k] = right[j]
             j += 1
-            inversions.extend([len(left) - i])
+            inversions += (len(left) - i)
         k += 1
+    for c in range(len(temp_arr)):
+        arr[c] = temp_arr[c]
+
     print(inversions)
 
+
+# test cases
+arr: List[int] = [1,5,3,4,2,6]
+arr: List[int] = [1, 20, 6, 4, 5]
 count_and_sort(arr)
+
+
+
 
 def count_inversions(arr: List[int]) -> int:
     n = len(arr)
