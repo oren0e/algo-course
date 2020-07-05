@@ -48,17 +48,43 @@ count_and_sort(arr)
 
 def count_inversions(arr: List[int]) -> int:
     n = len(arr)
-    if n == 1:
-        return 0
-    elif n == 2:
-        if arr[0] > arr[1]:
-            temp = arr[0]
-            arr[0] = arr[1]
-            arr[1] = temp
-    else:
-        b = count_inversions(arr[0:(len(arr)//2)])  # left
-        c = count_inversions(arr[(len(arr)//2):])   # right
-        z = count_split_inversions(arr)     # split
-    return b
+    if n > 1:
+        mid = n // 2
+        left = arr[:mid]
+        right = arr[mid:]
 
+        x = count_inversions(left)  # left
+        y = count_inversions(right)   # right
+
+        i = 0
+        j = 0
+        k = 0
+        inv_count: int = 0
+
+        while (i < len(left)) and (j < len(right)):
+            if left[i] < right[j]:
+                arr[k] = left[i]
+                i += 1
+            else:
+                arr[k] = right[j]
+                inv_count += (len(left) - i)
+                j += 1
+
+            k += 1
+
+        while i < len(left):
+            arr[k] = left[i]
+            i += 1
+            k += 1
+
+        while j < len(right):
+            arr[k] = right[j]
+            j += 1
+            k += 1
+        print(inv_count)
+
+#arr: List[int] = [83, 20, 9, 50, 115, 61, 17]
+arr: List[int] = [1, 20, 6, 4, 5]
+print(f'Array before: {arr}')
 count_inversions(arr)
+print(f'Array after: {arr}')
