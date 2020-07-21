@@ -9,7 +9,7 @@ class QuickSort(object):
         pivot: int = arr[left]
         i: int = left + 1
 
-        for j in range(left + 1, right+1):
+        for j in range(left + 1, right + 1):
             try:
                 if arr[j] < pivot:
                     arr[j], arr[i] = arr[i], arr[j]
