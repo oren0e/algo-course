@@ -48,23 +48,28 @@ class QuickSort(object):
 arr = [4, 5, 2, 3, 1]
 arr1 = [1,6,8,10,7,5,2,9,4,3]
 
-qs = QuickSort(choice='left')
-qs.quicksort(arr, left=0, right=(len(arr)))
-print(arr)
-qs.get_num_of_comparisons()
+# qs = QuickSort(choice='left')
+# qs.quicksort(arr, left=0, right=(len(arr)))
+# print(arr)
+# qs.get_num_of_comparisons()
 
-
-
-
-
-
-
-qs = QuickSort(choice='left')
+qs = QuickSort(choice='right')
 qs.quicksort(arr, left=0, right=(len(arr)))
 assert arr == sorted(arr)
-assert qs.get_num_of_comparisons() == 7
+assert qs.get_num_of_comparisons() == 8
 
-qs = QuickSort(choice='left')
+qs = QuickSort(choice='right')
 qs.quicksort(arr1, left=0, right=(len(arr1)))
 assert arr1 == sorted(arr1)
-assert qs.get_num_of_comparisons() == 26
+assert qs.get_num_of_comparisons() == 21
+
+
+# test on file
+comp_arr: List[int] = []
+with open('quicksort.txt', 'r') as f:
+    for line in f:
+        comp_arr.append(int(line))
+
+qs = QuickSort(choice='right')
+qs.quicksort(comp_arr, left=0, right=len(comp_arr))
+qs.get_num_of_comparisons()
