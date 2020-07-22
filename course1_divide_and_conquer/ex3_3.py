@@ -130,6 +130,24 @@ with open('quicksort.txt', 'r') as f:
     for line in f:
         comp_arr.append(int(line))
 
+qs = QuickSort(choice='left')
+qs.quicksort(comp_arr, left=0, right=len(comp_arr))
+print(qs.get_num_of_comparisons())
+
+comp_arr: List[int] = []
+with open('quicksort.txt', 'r') as f:
+    for line in f:
+        comp_arr.append(int(line))
+
+qs = QuickSort(choice='right')
+qs.quicksort(comp_arr, left=0, right=len(comp_arr))
+print(qs.get_num_of_comparisons())
+
+comp_arr: List[int] = []
+with open('quicksort.txt', 'r') as f:
+    for line in f:
+        comp_arr.append(int(line))
+
 qs = QuickSort(choice='median')
 qs.quicksort(comp_arr, left=0, right=len(comp_arr))
-qs.get_num_of_comparisons()
+print(qs.get_num_of_comparisons())
