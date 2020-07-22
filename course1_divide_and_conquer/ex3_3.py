@@ -1,3 +1,8 @@
+'''
+Find test cases at
+https://github.com/beaunus/stanford-algs/blob/master/testCases/course1/assignment3Quicksort
+'''
+
 from typing import List, Optional
 
 class QuickSort(object):
@@ -29,13 +34,20 @@ class QuickSort(object):
         return arr[mid_index]
 
     def choose_pivot(self, arr: List[int], left: int, right: int) -> None:
+        # fix array borders
+        #arr = arr[left:right]
+
         if self.choice == "left":
             piv = left
         elif self.choice == "right":
             piv = right - 1
         elif self.choice == "median":
-            mid: int = round(len(arr) / 2) - 1
-            # determine middle value
+            # if (right - left) % 2 == 0:
+            #     mid: int = ((right - left) // 2) - 1
+            # else:
+            #     mid: int = (right - left) // 2
+            mid: int = left + (right - left)//2
+            # determine median value
             mid_value = self.determine_median([arr[left], arr[mid], arr[right-1]])
             piv = arr.index(mid_value)
         else:
@@ -53,14 +65,13 @@ class QuickSort(object):
                     arr[j], arr[i] = arr[i], arr[j]
                     i += 1
             except IndexError:
-                #self.comparisons += 1
                 break
 
         arr[left], arr[i-1] = arr[i-1], arr[left]
         return i-1
 
     def quicksort(self, arr: List[int], left: int, right: int) -> Optional[List[int]]:
-        if left >= right:
+        if (left >= right):
             return None
         self.choose_pivot(arr, left, right)
         pivot = self.partition(arr, left=left, right=right)
@@ -73,16 +84,25 @@ class QuickSort(object):
 
 # test median choice
 # arr = [8, 2, 4, 5, 7, 1]
+# arr1 = [1, 6, 8, 10, 7, 5, 2, 9, 4, 3]
+# arr2 = [2,1,12,13,16,10,9,5,18,8,17,20,19,3,4,11,14,6,7,15]
 # qs = QuickSort(choice='median')
 # qs.choose_pivot(arr, left=0, right=len(arr))
+# assert arr[0] == 4
+# qs.choose_pivot(arr1, left=0, right=len(arr1))
+# assert arr1[0] == 3
+# qs.choose_pivot(arr2, left=0, right=len(arr2))
+# assert arr2[0] == 8
 
 # my tests
 arr = [4, 5, 2, 3, 1]
 arr1 = [1, 6, 8, 10, 7, 5, 2, 9, 4, 3]
+arr2 = [2,1,12,13,16,10,9,5,18,8,17,20,19,3,4,11,14,6,7,15]     # with 'median' should be 56 comparisons
+arr3 = [2, 20, 1, 15, 3, 11, 13, 6, 16, 10, 19, 5, 4, 9, 8, 14, 18, 17, 7, 12]
 
 qs = QuickSort(choice='median')
-qs.quicksort(arr1, left=0, right=(len(arr1)))
-print(arr1)
+qs.quicksort(arr3, left=0, right=(len(arr3)))
+print(arr3)
 qs.get_num_of_comparisons()
 
 # final test cases for all 3 parts
