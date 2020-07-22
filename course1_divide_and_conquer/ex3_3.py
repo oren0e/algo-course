@@ -10,6 +10,8 @@ class QuickSort(object):
     def __init__(self, choice):
         self.comparisons = 0
         self.choice = choice
+        self.median = 0     # for debugging
+        self.mid = 0    # for debugging
 
     def determine_median(self, arr: List[int]) -> int:
         '''
@@ -34,21 +36,16 @@ class QuickSort(object):
         return arr[mid_index]
 
     def choose_pivot(self, arr: List[int], left: int, right: int) -> None:
-        # fix array borders
-        #arr = arr[left:right]
-
         if self.choice == "left":
             piv = left
         elif self.choice == "right":
             piv = right - 1
         elif self.choice == "median":
-            # if (right - left) % 2 == 0:
-            #     mid: int = ((right - left) // 2) - 1
-            # else:
-            #     mid: int = (right - left) // 2
-            mid: int = left + (right - left)//2
+            mid: int = left + ((right - left)//2 - 1)
             # determine median value
             mid_value = self.determine_median([arr[left], arr[mid], arr[right-1]])
+            self.mid = arr[mid]         # for debugging
+            self.median = mid_value     # for debugging
             piv = arr.index(mid_value)
         else:
             raise ValueError('Invalid choice')
@@ -76,6 +73,9 @@ class QuickSort(object):
         self.choose_pivot(arr, left, right)
         pivot = self.partition(arr, left=left, right=right)
         self.comparisons += right - left - 1
+        print(f'Select {self.median} from left: {arr[left]} middle: {self.mid} right: {arr[right-1]}'
+              f'\nComparisons: {self.comparisons}')
+
         self.quicksort(arr, left=left, right=pivot)
         self.quicksort(arr, left=(pivot+1), right=right)
 
@@ -101,9 +101,21 @@ arr2 = [2,1,12,13,16,10,9,5,18,8,17,20,19,3,4,11,14,6,7,15]     # with 'median' 
 arr3 = [2, 20, 1, 15, 3, 11, 13, 6, 16, 10, 19, 5, 4, 9, 8, 14, 18, 17, 7, 12]
 
 qs = QuickSort(choice='median')
-qs.quicksort(arr3, left=0, right=(len(arr3)))
-print(arr3)
-qs.get_num_of_comparisons()
+qs.quicksort(arr2, left=0, right=(len(arr2)))
+print(arr2)
+assert qs.get_num_of_comparisons() == 56
+
+# debug on the first 100 elements
+comp_arr: List[int] = []
+with open('quicksort.txt', 'r') as f:
+    for line in f:
+        comp_arr.append(int(line))
+comp_arr = comp_arr[0:100]
+
+qs = QuickSort(choice='median')
+qs.quicksort(comp_arr, left=0, right=len(comp_arr))
+
+
 
 # final test cases for all 3 parts
 # arr
