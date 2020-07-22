@@ -41,7 +41,12 @@ class QuickSort(object):
         elif self.choice == "right":
             piv = right - 1
         elif self.choice == "median":
-            mid: int = left + ((right - left)//2 - 1)
+            if (right - left) % 2 == 0:
+                mid: int = (left + (right - left) // 2) - 1
+            else:
+                mid: int = left + (right - left) // 2
+
+            #mid: int = left + (right - left)//2
             # determine median value
             mid_value = self.determine_median([arr[left], arr[mid], arr[right-1]])
             self.mid = arr[mid]         # for debugging
@@ -73,8 +78,8 @@ class QuickSort(object):
         self.choose_pivot(arr, left, right)
         pivot = self.partition(arr, left=left, right=right)
         self.comparisons += right - left - 1
-        print(f'Select {self.median} from left: {arr[left]} middle: {self.mid} right: {arr[right-1]}'
-              f'\nComparisons: {self.comparisons}')
+        #print(f'Select {self.median} from left: {arr[left]} middle: {self.mid} right: {arr[right-1]}'
+        #      f'\nComparisons: {self.comparisons} right-left: {right-left}')
 
         self.quicksort(arr, left=left, right=pivot)
         self.quicksort(arr, left=(pivot+1), right=right)
