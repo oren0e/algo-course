@@ -6,6 +6,8 @@ import copy
 
 from math import log
 
+from tqdm import tqdm
+
 import random
 
 class Node:
@@ -79,15 +81,33 @@ class Graph:
             if edge == this_edge:
                 continue
             if edge.node1.value == this_edge.node2.value:
-                self.edges.remove(edge)
-                edge.node1 = this_edge.node1
+                try:
+                    self.edges.remove(edge)
+                    edge.node1 = this_edge.node1
+                    self.edges.append(edge)
+                except ValueError:
+                    #print('edge not in list')
+                    break
             if edge.node2.value == this_edge.node2.value:
-                self.edges.remove(edge)
-                edge.node2 = this_edge.node1
-            self.edges.append(edge)
+                try:
+                    self.edges.remove(edge)
+                    edge.node2 = this_edge.node1
+                    self.edges.append(edge)
+                except ValueError:
+                    #print('edge not in list')
+                    break
 
-        self.nodes.remove(this_edge.node2)
-        self.edges.remove(this_edge)
+
+        try:
+            self.nodes.remove(this_edge.node2)
+        except ValueError:
+            pass
+            #print('node is not in list')
+        try:
+            self.edges.remove(this_edge)
+        except ValueError:
+            pass
+            #print('selected edge not in list')
 
     def clear_self_loops(self) -> None:
         for edge in self.edges:
@@ -111,7 +131,7 @@ def get_min_cut(g: Graph, num_iter: Optional[float] = None) -> Tuple[Node, Node,
         n = len(g.nodes)
         num_iter: int = int(round(n**2)*log(n))
 
-    for iter in range(num_iter):
+    for _ in tqdm(range(num_iter), desc='searching for min_cuts'):
         cut = get_cut(g)
         if cut[2] < min_cut[2]:
             min_cut = cut
@@ -121,24 +141,32 @@ def get_min_cut(g: Graph, num_iter: Optional[float] = None) -> Tuple[Node, Node,
 
 
 # read the input
-input_list: List[List[Union[str, int]]] = []
-with open('kargerMinCut.txt', 'r') as f:
-    for line in f:
-        row_list: List[str] = []
-        row_string: str = re.sub(r'[\t]',' ',line.rstrip())
-        row_list.extend(row_string.split(' '))
-        input_list.append(row_list)
+def read_input(file: str) -> Graph:
+    input_list: List[List[Union[str, int]]] = []
+    with open(file, 'r') as f:
+        for line in f:
+            row_list: List[str] = []
+            row_string: str = re.sub(r'[\t]',' ',line.rstrip())
+            row_list.extend(row_string.split(' '))
+            input_list.append(row_list)
 
-# make it int instead of str
-for i, sub_list in enumerate(input_list):
-    for j, num in enumerate(sub_list):
-        input_list[i][j] = int(input_list[i][j])
+    # make it int instead of str
+    for i, sub_list in enumerate(input_list):
+        for j, num in enumerate(sub_list):
+            input_list[i][j] = int(input_list[i][j])
 
-# read into Graph class
-grph = Graph()
-for sub_list in input_list:
-    for num in sub_list[1:]:
-        grph.add_edge(sub_list[0], num)
+    # read into Graph class
+    grph = Graph()
+    for sub_list in input_list:
+        for num in sub_list[1:]:
+            grph.add_edge(sub_list[0], num)
+    return grph
 
-res = grph.get_adjacency_list()     # res[0] is None. res[1] to res[200] contain the data.
+#res = grph.get_adjacency_list()     # res[0] is None. res[1] to res[200] contain the data.
 
+# test cases
+graph_test1 = read_input('ex4_test_case1.txt')
+
+min_cut_res = get_min_cut(graph_test1, num_iter=5000)
+print(min_cut_res)
+min_cut_res[1].value
