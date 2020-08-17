@@ -82,7 +82,7 @@ class Graph:
 
     @staticmethod
     def add_filter_identical_edges(edge_list: List[Edge],
-                               edge_dict: TupleDict[Tuple[int, Tuple[int, int]], Edge],
+                               edge_dict: TupleDict,
                                new_edge: Edge) -> None:
         if not edge_list:
             new_edge_hash = hash(new_edge)
@@ -172,40 +172,48 @@ class Graph:
                                                        (this_edge.node2.value, edge.node2.value))]
                 except Exception as e:
                     print(f'{e.__class__} occured')
-            if edge.node2.value == this_edge.node2.value:
-                try:
-                    self.edges.remove(edge)
-                    edge.node2 = this_edge.node1
-                    self.edges.append(edge)
-                except Exception as e:
-                    print(f'{e.__class__} occured')
+
+            # if edge.node2.value == this_edge.node2.value:
+            #     try:
+            #         self.edges.remove(edge)
+            #         edge.node2 = this_edge.node1
+            #         self.edges.append(edge)
+            #     except Exception as e:
+            #         print(f'{e.__class__} occured')
 
                 # remove from Graph nodes and edges list
+        try:
+            for key, val in self.edge_dict:
+                if val == this_edge:
+                    del self.edge_dict[key]
+            self.edges.remove(this_edge)
+        except Exception as e:
+            print(f'{e.__class__} occured')
         try:
             self.nodes.remove(this_edge.node2)
         except Exception as e:
             print(f'{e.__class__} occured')
-        try:
-            self.edges.remove(this_edge)
-        except Exception as e:
-            print(f'{e.__class__} occured')
 
     def clear_self_loops(self) -> None:
-        edge_list = self.edges
-        for edge in edge_list:
+        self_loops: List[Edge] = []
+        for edge in self.edge_dict.values():
             if (edge.node1 == edge.node2) or (edge.node1.value == edge.node2.value):
-                edge_list.remove(edge)     # this is a self loop
+                self_loops.append(edge)
+        for key, edge in self.edge_dict:
+            if edge in self_loops:
+                del self.edge_dict[key]
+                self_loops.remove(edge)
 
 
 def get_cut(g: Graph) -> Tuple[List[Edge], int]:
     g_copy = copy.deepcopy(g)
     while len(g_copy.nodes) > 2:
-        chosen_edge = random.choice(g_copy.edges)
+        chosen_edge = random.choice(g_copy.edge_dict.values())
         g_copy.fuze_nodes_of_edge(chosen_edge)
         g_copy.clear_self_loops()
 
-    num_crossings: int = len(g_copy.edges)
-    return g_copy.edges, num_crossings
+    num_crossings: int = len(g_copy.edge_dict)
+    return list(g_copy.edge_dict.values()), num_crossings
 
 
 def get_min_cut(g: Graph, num_iter: Optional[float] = None) -> Tuple[List[Edge], int]:
