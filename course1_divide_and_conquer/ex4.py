@@ -10,14 +10,22 @@ from tqdm import tqdm
 
 import random
 
+
+class TupleDict(dict):
+    def __contains__(self, key):
+        if super(TupleDict, self).__contains__(key):
+            return True
+        return any(key in k for k in self)
+
+
 class Node:
     def __init__(self, value) -> None:
         '''
-        edge_dict is dict[(edge.node1.value, edge.node2.value), edge]
+        edge_dict is dict[(edge_hash,(edge.node1.value, edge.node2.value)), edge]
         '''
         self.value = value
         #self.edges: List[Edge] = []
-        self.edge_dict: Dict[Tuple[int, int], Edge] = {}
+        self.edge_dict: TupleDict[Tuple[int, Tuple[int, int]], Edge] = TupleDict({})
 
 
 class Edge:
@@ -30,7 +38,7 @@ class Graph:
     def __init__(self, nodes: List[Node] = [], edges: List[Edge] = []) -> None:
         self.nodes = nodes
         self.edges = edges
-        self.edge_dict: Dict[Tuple[int, int], Edge] = {}
+        self.edge_dict: TupleDict[Tuple[int, Tuple[int, int]], Edge] = TupleDict({})
 
     def add_node(self, new_node_val: int) -> None:
         new_node = Node(new_node_val)
@@ -53,10 +61,11 @@ class Graph:
             self.nodes.append(node2_found)
 
         new_edge = Edge(node1_found, node2_found)
+        new_edge_hash = hash(new_edge)
         # self.add_filter_identical_edges(node1_found.edges, node1_found.edge_dict, new_edge)
         # self.add_filter_identical_edges(node2_found.edges, node2_found.edge_dict, new_edge)
-        node1_found.edge_dict[(new_edge.node1.value, new_edge.node2.value)] = new_edge
-        node2_found.edge_dict[(new_edge.node2.value, new_edge.node1.value)] = new_edge
+        node1_found.edge_dict[(new_edge_hash, (new_edge.node1.value, new_edge.node2.value))] = new_edge
+        node2_found.edge_dict[(new_edge_hash, (new_edge.node2.value, new_edge.node1.value))] = new_edge
         #node2_found.edges.append(new_edge)
 
         # avoid appending the same edge twice (only in the Graph case)
@@ -73,17 +82,19 @@ class Graph:
 
     @staticmethod
     def add_filter_identical_edges(edge_list: List[Edge],
-                               edge_dict: Dict[Tuple[int, int], Edge],
+                               edge_dict: TupleDict[Tuple[int, Tuple[int, int]], Edge],
                                new_edge: Edge) -> None:
         if not edge_list:
+            new_edge_hash = hash(new_edge)
             edge_list.append(new_edge)
-            edge_dict[(new_edge.node1.value, new_edge.node2.value)] = new_edge
+            edge_dict[(new_edge_hash, (new_edge.node1.value, new_edge.node2.value))] = new_edge
         else:
             if (new_edge.node2.value, new_edge.node1.value) in edge_dict:
                 pass
             else:
+                new_edge_hash = hash(new_edge)
                 edge_list.append(new_edge)
-                edge_dict[(new_edge.node1.value, new_edge.node2.value)] = new_edge
+                edge_dict[(new_edge_hash, (new_edge.node1.value, new_edge.node2.value))] = new_edge
 
     def get_adjacency_list(self) -> List:
         '''
@@ -92,7 +103,7 @@ class Graph:
         '''
         lst = [None for _ in range(len(self.nodes) + 1)]
         for node in self.nodes:
-            if (len(node.edge_dict) == 1) and (list(node.edge_dict.keys())[0][1] == node.value):
+            if (len(node.edge_dict) == 1) and (list(node.edge_dict.keys())[0][1][1] == node.value):
                 continue
             inner_list = []
             for edge in node.edge_dict.values():
