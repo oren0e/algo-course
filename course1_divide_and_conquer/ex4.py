@@ -12,8 +12,12 @@ import random
 
 class Node:
     def __init__(self, value) -> None:
+        '''
+        edge_dict is dict[(edge.node1.value, edge.node2.value), edge]
+        '''
         self.value = value
-        self.edges: List[Edge] = []
+        #self.edges: List[Edge] = []
+        self.edge_dict: Dict[Tuple[int, int], Edge] = {}
 
 
 class Edge:
@@ -49,19 +53,37 @@ class Graph:
             self.nodes.append(node2_found)
 
         new_edge = Edge(node1_found, node2_found)
-        node1_found.edges.append(new_edge)
-        node2_found.edges.append(new_edge)
+        # self.add_filter_identical_edges(node1_found.edges, node1_found.edge_dict, new_edge)
+        # self.add_filter_identical_edges(node2_found.edges, node2_found.edge_dict, new_edge)
+        node1_found.edge_dict[(new_edge.node1.value, new_edge.node2.value)] = new_edge
+        node2_found.edge_dict[(new_edge.node2.value, new_edge.node1.value)] = new_edge
+        #node2_found.edges.append(new_edge)
 
         # avoid appending the same edge twice (only in the Graph case)
-        if not self.edges:
-            self.edges.append(new_edge)
-            self.edge_dict[(new_edge.node1.value, new_edge.node2.value)] = new_edge
+        self.add_filter_identical_edges(self.edges, self.edge_dict, new_edge)
+        # if not self.edges:
+        #     self.edges.append(new_edge)
+        #     self.edge_dict[(new_edge.node1.value, new_edge.node2.value)] = new_edge
+        # else:
+        #     if (new_edge.node2.value, new_edge.node1.value) in self.edge_dict:
+        #         pass
+        #     else:
+        #         self.edges.append(new_edge)
+        #         self.edge_dict[(new_edge.node1.value, new_edge.node2.value)] = new_edge
+
+    @staticmethod
+    def add_filter_identical_edges(edge_list: List[Edge],
+                               edge_dict: Dict[Tuple[int, int], Edge],
+                               new_edge: Edge) -> None:
+        if not edge_list:
+            edge_list.append(new_edge)
+            edge_dict[(new_edge.node1.value, new_edge.node2.value)] = new_edge
         else:
-            if (new_edge.node2.value, new_edge.node1.value) in self.edge_dict:
+            if (new_edge.node2.value, new_edge.node1.value) in edge_dict:
                 pass
             else:
-                self.edges.append(new_edge)
-                self.edge_dict[(new_edge.node1.value, new_edge.node2.value)] = new_edge
+                edge_list.append(new_edge)
+                edge_dict[(new_edge.node1.value, new_edge.node2.value)] = new_edge
 
     def get_adjacency_list(self) -> List:
         '''
@@ -70,10 +92,10 @@ class Graph:
         '''
         lst = [None for _ in range(len(self.nodes) + 1)]
         for node in self.nodes:
-            if (len(node.edges) == 1) and (node.edges[0].node2.value == node.value):
+            if (len(node.edge_dict) == 1) and (list(node.edge_dict.keys())[0][1] == node.value):
                 continue
             inner_list = []
-            for edge in node.edges:
+            for edge in node.edge_dict.values():
                 if edge.node2.value == node.value:
                     continue
                 inner_list.append(edge.node2.value)
@@ -87,11 +109,40 @@ class Graph:
         will be always node2
         '''
         # treat all the edges of the fused node
-        for edge in this_edge.node2.edges:
+        for edge in this_edge.node2.edge_dict.values():
             if edge == this_edge:
                 continue
+                #edge.node1.edges.remove()
             if edge.node1.value == this_edge.node2.value:
                 try:
+                    # reroute connected edges
+                    edge.node1 = this_edge.node1
+                    # add "new" edges to involved nodes
+                    #this_edge.node1.edges.append(edge)
+                    # to this_edge node1 (and delete the old edge from this_edge.node1)
+                    if (this_edge.node1.value, this_edge.node2.value) in this_edge.node1.edge_dict:
+                        del this_edge.node1.edge_dict[(this_edge.node1.value, this_edge.node2.value)]
+                    if (this_edge.node1.value, edge.node2.value) not in this_edge.node1.edge_dict:
+                        this_edge.node1.edge_dict[(this_edge.node1.value, edge.node2.value)] = edge
+
+                    # to edge node2 (and delete the old edge from edge.node2)
+                    if (edge.node2.value, this_edge.node2.value) in edge.node2.edge_dict:
+                        del edge.node2.edge_dict[(edge.node2.value, this_edge.node2.value)]
+                    edge.node2.edge_dict[(edge.node2.value, this_edge.node1.value)] = edge
+
+                    # remove edges from the fused node
+                    # from this_edge (node2)
+                    if (this_edge.node2.value, this_edge.node1.value) in this_edge.node2.edge_dict:
+                        del this_edge.node2.edge_dict[(this_edge.node2.value, this_edge.node1.value)]
+
+                    # from edge (node1)
+                    if (this_edge.node2.value, edge.node2.value) in this_edge.node2.edge_dict:
+                        del this_edge.node2.edge_dict[(this_edge.node2.value, edge.node2.value)]
+
+                    # remove from Graph nodes and edges list
+
+
+
                     self.edges.remove(edge)
                     edge.node1 = this_edge.node1
                     self.edges.append(edge)
@@ -126,7 +177,7 @@ class Graph:
                 edge_list.remove(edge)     # this is a self loop
 
 
-def get_cut(g: Graph) -> Tuple[Node, Node, int]:
+def get_cut(g: Graph) -> Tuple[List[Edge], int]:
     g_copy = copy.deepcopy(g)
     while len(g_copy.nodes) > 2:
         chosen_edge = random.choice(g_copy.edges)
@@ -134,17 +185,18 @@ def get_cut(g: Graph) -> Tuple[Node, Node, int]:
         g_copy.clear_self_loops()
 
     num_crossings: int = len(g_copy.edges)
-    return g_copy.edges[0].node1, g_copy.edges[0].node2, num_crossings
+    return g_copy.edges, num_crossings
 
-def get_min_cut(g: Graph, num_iter: Optional[float] = None) -> Tuple[Node, Node, int]:
-    min_cut: Tuple[Optional[Node], Optional[Node], float] = (None, None, float('inf'))
+
+def get_min_cut(g: Graph, num_iter: Optional[float] = None) -> Tuple[List[Edge], int]:
+    min_cut: Tuple[Optional[List[Edge]], float] = (None, float('inf'))
     if num_iter is None:
         n = len(g.nodes)
         num_iter: int = int(round(n**2)*log(n))
 
     for _ in tqdm(range(num_iter), desc='searching for min_cuts'):
         cut = get_cut(g)
-        if cut[2] < min_cut[2]:
+        if cut[1] < min_cut[1]:
             min_cut = cut
     return min_cut
 
@@ -176,10 +228,11 @@ def read_input(file: str) -> Graph:
 #res = grph.get_adjacency_list()     # res[0] is None. res[1] to res[200] contain the data.
 
 # test cases
-graph_test1 = read_input('ex4_test_case1.txt')
+graph_test1 = read_input('ex4_test_case0.txt')
+#graph_test1 = read_input('kargerMinCut.txt')
 cut_res = get_cut(graph_test1)
 
-
-#min_cut_res = get_min_cut(graph_test1, num_iter=5000)
-#print(min_cut_res)
-#min_cut_res[1].value
+# min_cut_res = get_min_cut(graph_test1, 16)
+# print(min_cut_res[1])
+# print(f'First cut: ({min_cut_res[0][0].node1.value},{min_cut_res[0][0].node2.value})')
+# print(f'Second cut: ({min_cut_res[0][1].node1.value},{min_cut_res[0][1].node2.value})')
