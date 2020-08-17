@@ -1,4 +1,4 @@
-from typing import List, Union, Tuple, Optional
+from typing import List, Union, Tuple, Optional, Dict
 
 import re
 
@@ -26,7 +26,7 @@ class Graph:
     def __init__(self, nodes: List[Node] = [], edges: List[Edge] = []) -> None:
         self.nodes = nodes
         self.edges = edges
-        # TODO: add containers for fused nodes
+        self.edge_dict: Dict[Tuple[int, int], Edge] = {}
 
     def add_node(self, new_node_val: int) -> None:
         new_node = Node(new_node_val)
@@ -51,7 +51,17 @@ class Graph:
         new_edge = Edge(node1_found, node2_found)
         node1_found.edges.append(new_edge)
         node2_found.edges.append(new_edge)
-        self.edges.append(new_edge)
+
+        # avoid appending the same edge twice (only in the Graph case)
+        if not self.edges:
+            self.edges.append(new_edge)
+            self.edge_dict[(new_edge.node1.value, new_edge.node2.value)] = new_edge
+        else:
+            if (new_edge.node2.value, new_edge.node1.value) in self.edge_dict:
+                pass
+            else:
+                self.edges.append(new_edge)
+                self.edge_dict[(new_edge.node1.value, new_edge.node2.value)] = new_edge
 
     def get_adjacency_list(self) -> List:
         '''
@@ -110,9 +120,10 @@ class Graph:
             #print('selected edge not in list')
 
     def clear_self_loops(self) -> None:
-        for edge in self.edges:
+        edge_list = self.edges
+        for edge in edge_list:
             if (edge.node1 == edge.node2) or (edge.node1.value == edge.node2.value):
-                self.edges.remove(edge)     # this is a self loop
+                edge_list.remove(edge)     # this is a self loop
 
 
 def get_cut(g: Graph) -> Tuple[Node, Node, int]:
@@ -166,7 +177,9 @@ def read_input(file: str) -> Graph:
 
 # test cases
 graph_test1 = read_input('ex4_test_case1.txt')
+cut_res = get_cut(graph_test1)
 
-min_cut_res = get_min_cut(graph_test1, num_iter=5000)
-print(min_cut_res)
-min_cut_res[1].value
+
+#min_cut_res = get_min_cut(graph_test1, num_iter=5000)
+#print(min_cut_res)
+#min_cut_res[1].value
