@@ -222,15 +222,18 @@ class Graph:
         for node in self.nodes:
             graph_dict.update(node.edge_dict)
 
-        for key in list(graph_dict.keys()):
+        keys = list(graph_dict.keys())
+        for key in keys:
             nd1_val = key[1][0]
             nd2_val = key[1][1]
             try:
                 opposite_keys = list(graph_dict.get_keys_from_tup((None, (nd2_val, nd1_val))))
                 if (len(opposite_keys) > 1) and key in graph_dict:
                     del graph_dict[key]
+                    keys.remove(key)
                 else:
                     del graph_dict[opposite_keys[0]]
+                    keys.remove(opposite_keys[0])
             except IndexError:
                 continue
         self.edge_dict = graph_dict
@@ -260,8 +263,8 @@ def get_cut(g: Graph) -> Tuple[List[Edge], int]:
     num_crossings: int = len(g_copy.edge_dict)
     return list(g_copy.edge_dict.values()), num_crossings
 
-#def compute_crossings(edge_list: List[Edge], node_list: List[Node]) -> int:
-
+def compute_crossings(edge_list: List[Edge], node_list: List[Node]) -> int:
+    pass
 
 def get_min_cut(g: Graph, num_iter: Optional[float] = None) -> Tuple[List[Edge], int]:
     min_cut: Tuple[Optional[List[Edge]], float] = (None, float('inf'))
@@ -303,12 +306,13 @@ def read_input(file: str) -> Graph:
 #res = grph.get_adjacency_list()     # res[0] is None. res[1] to res[200] contain the data.
 
 # test cases
-graph_test1 = read_input('ex4_test_case1.txt')
+graph_test1 = read_input('ex4_test_case0.txt')
 #graph_test1 = read_input('kargerMinCut.txt')
-cut_res = get_cut(graph_test1)
+#cut_res = get_cut(graph_test1)
 
-min_cut_res = get_min_cut(graph_test1, 64)
+min_cut_res = get_min_cut(graph_test1, 20)
 print(min_cut_res)
-print(min_cut_res[1])
+#print(min_cut_res[1])
 print(f'First cut: ({min_cut_res[0][0].node1.value},{min_cut_res[0][0].node2.value})')
-# print(f'Second cut: ({min_cut_res[0][1].node1.value},{min_cut_res[0][1].node2.value})')
+print(f'Second cut: ({min_cut_res[0][1].node1.value},{min_cut_res[0][1].node2.value})')
+#print(f'Third cut: ({min_cut_res[0][2].node1.value},{min_cut_res[0][2].node2.value})')
