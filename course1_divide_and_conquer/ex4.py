@@ -132,54 +132,63 @@ class Graph:
                     #this_edge.node1.edges.append(edge)
                     # to this_edge node1 (and delete the old edge from this_edge.node1)
                     if (this_edge.node1.value, this_edge.node2.value) in this_edge.node1.edge_dict:
-                        del this_edge.node1.edge_dict[(this_edge.node1.value, this_edge.node2.value)]
+                        # delete one of existing (if multiple exist)
+                        selected_hash = random.choice([key[0] for key in
+                                                       list(this_edge.node1.edge_dict.keys())
+                                                       if key[1] == (this_edge.node1.value,
+                                                                     this_edge.node2.value)])
+                        del this_edge.node1.edge_dict[(selected_hash,
+                                                       (this_edge.node1.value, this_edge.node2.value))]
                     if (this_edge.node1.value, edge.node2.value) not in this_edge.node1.edge_dict:
-                        this_edge.node1.edge_dict[(this_edge.node1.value, edge.node2.value)] = edge
+                        this_edge.node1.edge_dict[(hash(edge), (this_edge.node1.value, edge.node2.value))] = edge
 
                     # to edge node2 (and delete the old edge from edge.node2)
                     if (edge.node2.value, this_edge.node2.value) in edge.node2.edge_dict:
-                        del edge.node2.edge_dict[(edge.node2.value, this_edge.node2.value)]
-                    edge.node2.edge_dict[(edge.node2.value, this_edge.node1.value)] = edge
+                        selected_hash = random.choice([key[0] for key in
+                                                       list(edge.node2.edge_dict.keys())
+                                                       if key[1] == (edge.node2.value,
+                                                                     this_edge.node2.value)])
+                        del edge.node2.edge_dict[(selected_hash,
+                                                  (edge.node2.value, this_edge.node2.value))]
+                    edge.node2.edge_dict[(hash(edge), (edge.node2.value, this_edge.node1.value))] = edge
 
                     # remove edges from the fused node
                     # from this_edge (node2)
                     if (this_edge.node2.value, this_edge.node1.value) in this_edge.node2.edge_dict:
-                        del this_edge.node2.edge_dict[(this_edge.node2.value, this_edge.node1.value)]
+                        selected_hash = random.choice([key[0] for key in
+                                                       list(this_edge.node2.edge_dict.keys())
+                                                       if key[1] == (this_edge.node2.value,
+                                                                     this_edge.node1.value)])
+                        del this_edge.node2.edge_dict[(selected_hash,
+                                                       (this_edge.node2.value, this_edge.node1.value))]
 
                     # from edge (node1)
                     if (this_edge.node2.value, edge.node2.value) in this_edge.node2.edge_dict:
-                        del this_edge.node2.edge_dict[(this_edge.node2.value, edge.node2.value)]
-
-                    # remove from Graph nodes and edges list
-
-
-
-                    self.edges.remove(edge)
-                    edge.node1 = this_edge.node1
-                    self.edges.append(edge)
-                except ValueError:
-                    #print('edge not in list')
-                    break
+                        selected_hash = random.choice([key[0] for key in
+                                                       list(this_edge.node2.edge_dict.keys())
+                                                       if key[1] == (this_edge.node2.value,
+                                                                     edge.node2.value)])
+                        del this_edge.node2.edge_dict[(selected_hash,
+                                                       (this_edge.node2.value, edge.node2.value))]
+                except Exception as e:
+                    print(f'{e.__class__} occured')
             if edge.node2.value == this_edge.node2.value:
                 try:
                     self.edges.remove(edge)
                     edge.node2 = this_edge.node1
                     self.edges.append(edge)
-                except ValueError:
-                    #print('edge not in list')
-                    break
+                except Exception as e:
+                    print(f'{e.__class__} occured')
 
-
+                # remove from Graph nodes and edges list
         try:
             self.nodes.remove(this_edge.node2)
-        except ValueError:
-            pass
-            #print('node is not in list')
+        except Exception as e:
+            print(f'{e.__class__} occured')
         try:
             self.edges.remove(this_edge)
-        except ValueError:
-            pass
-            #print('selected edge not in list')
+        except Exception as e:
+            print(f'{e.__class__} occured')
 
     def clear_self_loops(self) -> None:
         edge_list = self.edges
