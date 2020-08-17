@@ -61,11 +61,11 @@ class Graph:
             self.nodes.append(node2_found)
 
         new_edge = Edge(node1_found, node2_found)
-        new_edge_hash = hash(new_edge)
-        # self.add_filter_identical_edges(node1_found.edges, node1_found.edge_dict, new_edge)
-        # self.add_filter_identical_edges(node2_found.edges, node2_found.edge_dict, new_edge)
-        node1_found.edge_dict[(new_edge_hash, (new_edge.node1.value, new_edge.node2.value))] = new_edge
-        node2_found.edge_dict[(new_edge_hash, (new_edge.node2.value, new_edge.node1.value))] = new_edge
+        #new_edge_hash = hash(new_edge)
+        self.add_filter_identical_edges(list(node1_found.edge_dict.values()), node1_found.edge_dict, new_edge, node1_found.value)
+        self.add_filter_identical_edges(list(node2_found.edge_dict.values()), node2_found.edge_dict, new_edge, node2_found.value)
+        #node1_found.edge_dict[(new_edge_hash, (new_edge.node1.value, new_edge.node2.value))] = new_edge
+        #node2_found.edge_dict[(new_edge_hash, (new_edge.node2.value, new_edge.node1.value))] = new_edge
         #node2_found.edges.append(new_edge)
 
         # avoid appending the same edge twice (only in the Graph case)
@@ -83,14 +83,29 @@ class Graph:
     @staticmethod
     def add_filter_identical_edges(edge_list: List[Edge],
                                edge_dict: TupleDict,
-                               new_edge: Edge) -> None:
+                               new_edge: Edge,
+                               current_node_num: Optional[int] = None) -> None:
         if not edge_list:
             new_edge_hash = hash(new_edge)
             edge_list.append(new_edge)
             edge_dict[(new_edge_hash, (new_edge.node1.value, new_edge.node2.value))] = new_edge
         else:
             if (new_edge.node2.value, new_edge.node1.value) in edge_dict:
-                pass
+                if current_node_num is None:    # Graph version
+                    pass
+                else:   # Node version (first node should be the current node)
+                    try:
+                        selected_hash = [key[0] for key in list(edge_dict.keys()) if key[1][0] != current_node_num][0]
+                    except IndexError:
+                        return None
+                    if new_edge.node2.value == current_node_num:
+                        del edge_dict[(selected_hash, (new_edge.node1.value, new_edge.node2.value))]
+                        new_edge_hash = hash(new_edge)
+                        edge_dict[(new_edge_hash, (new_edge.node2.value, new_edge.node1.value))] = new_edge
+                    elif new_edge.node1.value == current_node_num:
+                        del edge_dict[(selected_hash, (new_edge.node2.value, new_edge.node1.value))]
+                        new_edge_hash = hash(new_edge)
+                        edge_dict[(new_edge_hash, (new_edge.node1.value, new_edge.node2.value))] = new_edge
             else:
                 new_edge_hash = hash(new_edge)
                 edge_list.append(new_edge)
@@ -120,7 +135,7 @@ class Graph:
         will be always node2
         '''
         # treat all the edges of the fused node
-        for edge in this_edge.node2.edge_dict.values():
+        for edge in list(this_edge.node2.edge_dict.values()):
             if edge == this_edge:
                 continue
                 #edge.node1.edges.remove()
@@ -196,7 +211,7 @@ class Graph:
 
     def clear_self_loops(self) -> None:
         self_loops: List[Edge] = []
-        for edge in self.edge_dict.values():
+        for edge in list(self.edge_dict.values()):
             if (edge.node1 == edge.node2) or (edge.node1.value == edge.node2.value):
                 self_loops.append(edge)
         for key, edge in self.edge_dict:
@@ -208,7 +223,7 @@ class Graph:
 def get_cut(g: Graph) -> Tuple[List[Edge], int]:
     g_copy = copy.deepcopy(g)
     while len(g_copy.nodes) > 2:
-        chosen_edge = random.choice(g_copy.edge_dict.values())
+        chosen_edge = random.choice(list(g_copy.edge_dict.values()))
         g_copy.fuze_nodes_of_edge(chosen_edge)
         g_copy.clear_self_loops()
 
@@ -260,7 +275,7 @@ graph_test1 = read_input('ex4_test_case0.txt')
 #graph_test1 = read_input('kargerMinCut.txt')
 cut_res = get_cut(graph_test1)
 
-# min_cut_res = get_min_cut(graph_test1, 16)
-# print(min_cut_res[1])
+min_cut_res = get_min_cut(graph_test1, 50)
+print(min_cut_res[1])
 # print(f'First cut: ({min_cut_res[0][0].node1.value},{min_cut_res[0][0].node2.value})')
 # print(f'Second cut: ({min_cut_res[0][1].node1.value},{min_cut_res[0][1].node2.value})')
