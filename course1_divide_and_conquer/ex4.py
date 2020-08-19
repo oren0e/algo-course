@@ -147,62 +147,102 @@ class Graph:
         '''
         # treat all the edges of the fused node
         node2_edges = list(this_edge.node2.edge_dict.values())
-        for edge in node2_edges:  # TODO: Do here the same trick as in rebuild_graph()
-            if edge == this_edge:
+        node2_keys = list(this_edge.node2.edge_dict.keys())
+        node2_indices_to_remove: List[int] = []
+        for edge in node2_edges:
+            if edge not in list(this_edge.node2.edge_dict.values()):
                 continue
-                #edge.node1.edges.remove()
+            if (edge.node1.value == this_edge.node2.value) and (edge.node2.value == this_edge.node1.value):
+                # del edge from edge.node1
+                selected_hash = random.choice([key[0] for key in
+                                               list(edge.node1.edge_dict.keys())
+                                               if key[1] == (edge.node1.value,
+                                                             edge.node2.value)])
+                del edge.node1.edge_dict[(selected_hash,
+                                          (edge.node1.value, edge.node2.value))]
+                # del edge from edge.node2
+                if not [key[0] for key in list(edge.node2.edge_dict.keys())
+                                               if key[1] == (edge.node2.value,
+                                                             edge.node1.value)]:
+                    continue
+                selected_hash = random.choice([key[0] for key in
+                                               list(edge.node2.edge_dict.keys())
+                                               if key[1] == (edge.node2.value,
+                                                             edge.node1.value)])
+                del edge.node2.edge_dict[(selected_hash,
+                                          (edge.node2.value, edge.node1.value))]
+                continue
             if edge.node1.value == this_edge.node2.value:
-                try:
-                    # reroute connected edges
-                    edge.node1 = this_edge.node1
-                    # add "new" edges to involved nodes
-                    #this_edge.node1.edges.append(edge)
-                    # to this_edge node1 (and delete the old edge from this_edge.node1)
-                    if (this_edge.node1.value, this_edge.node2.value) in this_edge.node1.edge_dict:
-                        # delete one of existing (if multiple exist)
-                        selected_hash = random.choice([key[0] for key in
-                                                       list(this_edge.node1.edge_dict.keys())
-                                                       if key[1] == (this_edge.node1.value,
-                                                                     this_edge.node2.value)])
-                        del this_edge.node1.edge_dict[(selected_hash,
-                                                       (this_edge.node1.value, this_edge.node2.value))]
-                    if (this_edge.node1.value, edge.node2.value) not in this_edge.node1.edge_dict:
-                        this_edge.node1.edge_dict[(hash(edge), (this_edge.node1.value, edge.node2.value))] = edge
+                # reroute connected edges
+                edge.node1 = this_edge.node1
+                # add "new" edges to involved nodes
+                #this_edge.node1.edges.append(edge)
+                # to this_edge node1 (and delete the old edge from this_edge.node1)
+                if (this_edge.node1.value, this_edge.node2.value) in this_edge.node1.edge_dict:
+                    # delete one of existing (if multiple exist)
+                    selected_hash = random.choice([key[0] for key in
+                                                   list(this_edge.node1.edge_dict.keys())
+                                                   if key[1] == (this_edge.node1.value,
+                                                                 this_edge.node2.value)])
+                    del this_edge.node1.edge_dict[(selected_hash,
+                                                   (this_edge.node1.value, this_edge.node2.value))]
 
-                    # to edge node2 (and delete the old edge from edge.node2)
-                    if (edge.node2.value, this_edge.node2.value) in edge.node2.edge_dict:
-                        selected_hash = random.choice([key[0] for key in
-                                                       list(edge.node2.edge_dict.keys())
-                                                       if key[1] == (edge.node2.value,
-                                                                     this_edge.node2.value)])
-                        del edge.node2.edge_dict[(selected_hash,
-                                                  (edge.node2.value, this_edge.node2.value))]
-                    edge.node2.edge_dict[(hash(edge), (edge.node2.value, this_edge.node1.value))] = edge
+                if (this_edge.node1.value, edge.node2.value) not in this_edge.node1.edge_dict:
+                    edge_hash = hash(edge)
+                    this_edge.node1.edge_dict[(edge_hash, (this_edge.node1.value, edge.node2.value))] = edge
 
-                    # remove edges from the fused node
-                    # from this_edge (node2)
-                    if (this_edge.node2.value, this_edge.node1.value) in this_edge.node2.edge_dict:
-                        selected_hash = random.choice([key[0] for key in
-                                                       list(this_edge.node2.edge_dict.keys())
-                                                       if key[1] == (this_edge.node2.value,
-                                                                     this_edge.node1.value)])
+                # to edge node2 (and delete the old edge from edge.node2)
+                if (edge.node2.value, this_edge.node2.value) in edge.node2.edge_dict:
+                    selected_hash = random.choice([key[0] for key in
+                                                   list(edge.node2.edge_dict.keys())
+                                                   if key[1] == (edge.node2.value,
+                                                                 this_edge.node2.value)])
+                    del edge.node2.edge_dict[(selected_hash,
+                                              (edge.node2.value, this_edge.node2.value))]
+                edge.node2.edge_dict[(hash(edge), (edge.node2.value, this_edge.node1.value))] = edge
+
+                # remove edges from the fused node
+                # from this_edge (node2)
+                if (this_edge.node2.value, this_edge.node1.value) in this_edge.node2.edge_dict:
+                    selected_hash = random.choice([key[0] for key in
+                                                   node2_keys
+                                                   if key[1] == (this_edge.node2.value,
+                                                                 this_edge.node1.value)])
+
+                    # idx = node2_edges.index(this_edge.node2.edge_dict[(selected_hash,
+                    #                                               (this_edge.node2.value, this_edge.node1.value))])
+                    # node2_indices_to_remove.append(idx)
+                    try:
                         del this_edge.node2.edge_dict[(selected_hash,
                                                        (this_edge.node2.value, this_edge.node1.value))]
-                        node2_edges.remove(this_edge.node2.edge_dict[(selected_hash,
-                                                       (this_edge.node2.value, this_edge.node1.value))])
+                        node2_keys.remove((selected_hash,
+                                                       (this_edge.node2.value, this_edge.node1.value)))
+                    except KeyError:
+                        pass
 
-                    # from edge (node1)
-                    if (this_edge.node2.value, edge.node2.value) in this_edge.node2.edge_dict:
-                        selected_hash = random.choice([key[0] for key in
-                                                       list(this_edge.node2.edge_dict.keys())
-                                                       if key[1] == (this_edge.node2.value,
-                                                                     edge.node2.value)])
-                        del this_edge.node2.edge_dict[(selected_hash,
-                                                       (this_edge.node2.value, edge.node2.value))]
-                        node2_edges.remove(this_edge.node2.edge_dict[(selected_hash,
-                                                       (this_edge.node2.value, edge.node2.value))])
-                except Exception as e:
-                    print(f'{e.__class__} occured')
+                # from edge (node1)
+                if (this_edge.node2.value, edge.node2.value) in this_edge.node2.edge_dict:
+                    selected_hash = random.choice([key[0] for key in
+                                                   node2_keys
+                                                   if key[1] == (this_edge.node2.value,
+                                                                 edge.node2.value)])
+
+                    # idx = node2_edges.index(this_edge.node2.edge_dict[(selected_hash,
+                    #                                               (this_edge.node2.value, edge.node2.value))])
+                    # node2_indices_to_remove.append(idx)
+                    del this_edge.node2.edge_dict[(selected_hash,
+                                                   (this_edge.node2.value, edge.node2.value))]
+                    node2_keys.remove((selected_hash,
+                                                   (this_edge.node2.value, edge.node2.value)))
+
+        # remove the indices
+        # for index in sorted(node2_indices_to_remove, reverse=True):
+        #     del node2_edges[index]
+
+
+
+                #except Exception as e:
+                #    print(f'{e.__class__} occured')
 
             # if edge.node2.value == this_edge.node2.value:
             #     try:
@@ -213,17 +253,19 @@ class Graph:
             #         print(f'{e.__class__} occured')
 
                 # remove from Graph nodes and edges list
-        try:
-            for key, val in self.edge_dict:
-                if val == this_edge:
-                    del self.edge_dict[key]
-            self.edges.remove(this_edge)
-        except Exception as e:
-            print(f'{e.__class__} occured')
+        # try:
+        #     for key, val in self.edge_dict:
+        #         if val == this_edge:
+        #             del self.edge_dict[key]
+        #     self.edges.remove(this_edge)
+        # except Exception as e:
+        #     print(f'{e.__class__} occured')
         try:
             self.nodes.remove(this_edge.node2)
         except Exception as e:
             print(f'{e.__class__} occured')
+
+        self.rebuild_graph_edges()
 
     def rebuild_graph_edges(self) -> None:
         '''
@@ -237,9 +279,17 @@ class Graph:
         for key in keys:
             nd1_val = key[1][0]
             nd2_val = key[1][1]
+            # clear self loops
+            if nd1_val == nd2_val:  # this is a self loop
+                del graph_dict[key]
+                keys.remove(key)
+                continue
             try:
                 opposite_keys = list(graph_dict.get_keys_from_tup((None, (nd2_val, nd1_val))))
-                if (len(opposite_keys) > 1) and key in graph_dict:
+                current_keys = list(graph_dict.get_keys_from_tup((None, (nd1_val, nd2_val))))
+                if (len(opposite_keys) > 1) and (key in graph_dict) and (len(current_keys) == 1): #TODO: and if not opposite key is bigger than 1
+                                                                   # otherwise it suggests that the opposite was also
+                                                                   # merged in the process.
                     del graph_dict[key]
                     keys.remove(key)
                 else:
@@ -248,9 +298,6 @@ class Graph:
             except IndexError:
                 continue
         self.edge_dict = graph_dict
-
-
-
 
     def clear_self_loops(self) -> None:
         self_loops: List[Edge] = []
@@ -269,7 +316,7 @@ def get_cut(g: Graph) -> Tuple[List[Edge], int]:
         chosen_edge = random.choice(list(g_copy.edge_dict.values()))
         g_copy.fuze_nodes_of_edge(chosen_edge)
         #g_copy.clear_self_loops()
-        g_copy.rebuild_graph_edges()
+        #g_copy.rebuild_graph_edges()
 
     num_crossings: int = len(g_copy.edge_dict)
     return list(g_copy.edge_dict.values()), num_crossings
@@ -290,7 +337,7 @@ def get_min_cut(g: Graph, num_iter: Optional[float] = None) -> Tuple[List[Edge],
     return min_cut
 
 
-
+# TODO: When there are 2 nodes left you DO need to keep opposite edges in the Graph!
 
 # read the input
 def read_input(file: str) -> Graph:
@@ -317,11 +364,11 @@ def read_input(file: str) -> Graph:
 #res = grph.get_adjacency_list()     # res[0] is None. res[1] to res[200] contain the data.
 
 # test cases
-#graph_test1 = read_input('ex4_test_case1.txt')
-graph_test1 = read_input('kargerMinCut.txt')
+graph_test1 = read_input('ex4_test_case1.txt')
+#graph_test1 = read_input('kargerMinCut.txt')
 #cut_res = get_cut(graph_test1)
 
-min_cut_res = get_min_cut(graph_test1, 300)
+min_cut_res = get_min_cut(graph_test1, 100)
 print(min_cut_res)
 #print(min_cut_res[1])
 print(f'First cut: ({min_cut_res[0][0].node1.value},{min_cut_res[0][0].node2.value})')
