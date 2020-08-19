@@ -99,15 +99,21 @@ class Graph:
                 if current_node_num is None:    # Graph version
                     pass
                 else:   # Node version (first node should be the current node)
-                    try:
-                        selected_hash = [key[0] for key in list(edge_dict.keys()) if key[1][0] != current_node_num][0]
-                    except IndexError:
-                        return None
                     if new_edge.node2.value == current_node_num:
+                        try:
+                            selected_hash = [key[0] for key in list(edge_dict.keys()) if
+                                             (key[1][0] == new_edge.node1.value) and (key[1][1] == new_edge.node2.value)][0]
+                        except IndexError:
+                            return None
                         del edge_dict[(selected_hash, (new_edge.node1.value, new_edge.node2.value))]
                         new_edge_hash = hash(new_edge)
                         edge_dict[(new_edge_hash, (new_edge.node2.value, new_edge.node1.value))] = new_edge
                     elif new_edge.node1.value == current_node_num:
+                        try:
+                            selected_hash = [key[0] for key in list(edge_dict.keys()) if
+                                             (key[1][0] == new_edge.node2.value) and (key[1][1] == new_edge.node1.value)][0]
+                        except IndexError:
+                            return None
                         del edge_dict[(selected_hash, (new_edge.node2.value, new_edge.node1.value))]
                         new_edge_hash = hash(new_edge)
                         edge_dict[(new_edge_hash, (new_edge.node1.value, new_edge.node2.value))] = new_edge
@@ -140,7 +146,8 @@ class Graph:
         will be always node2
         '''
         # treat all the edges of the fused node
-        for edge in list(this_edge.node2.edge_dict.values()):
+        node2_edges = list(this_edge.node2.edge_dict.values())
+        for edge in node2_edges:  # TODO: Do here the same trick as in rebuild_graph()
             if edge == this_edge:
                 continue
                 #edge.node1.edges.remove()
@@ -181,6 +188,8 @@ class Graph:
                                                                      this_edge.node1.value)])
                         del this_edge.node2.edge_dict[(selected_hash,
                                                        (this_edge.node2.value, this_edge.node1.value))]
+                        node2_edges.remove(this_edge.node2.edge_dict[(selected_hash,
+                                                       (this_edge.node2.value, this_edge.node1.value))])
 
                     # from edge (node1)
                     if (this_edge.node2.value, edge.node2.value) in this_edge.node2.edge_dict:
@@ -190,6 +199,8 @@ class Graph:
                                                                      edge.node2.value)])
                         del this_edge.node2.edge_dict[(selected_hash,
                                                        (this_edge.node2.value, edge.node2.value))]
+                        node2_edges.remove(this_edge.node2.edge_dict[(selected_hash,
+                                                       (this_edge.node2.value, edge.node2.value))])
                 except Exception as e:
                     print(f'{e.__class__} occured')
 
@@ -306,13 +317,13 @@ def read_input(file: str) -> Graph:
 #res = grph.get_adjacency_list()     # res[0] is None. res[1] to res[200] contain the data.
 
 # test cases
-graph_test1 = read_input('ex4_test_case0.txt')
-#graph_test1 = read_input('kargerMinCut.txt')
+#graph_test1 = read_input('ex4_test_case1.txt')
+graph_test1 = read_input('kargerMinCut.txt')
 #cut_res = get_cut(graph_test1)
 
-min_cut_res = get_min_cut(graph_test1, 20)
+min_cut_res = get_min_cut(graph_test1, 300)
 print(min_cut_res)
 #print(min_cut_res[1])
 print(f'First cut: ({min_cut_res[0][0].node1.value},{min_cut_res[0][0].node2.value})')
 print(f'Second cut: ({min_cut_res[0][1].node1.value},{min_cut_res[0][1].node2.value})')
-#print(f'Third cut: ({min_cut_res[0][2].node1.value},{min_cut_res[0][2].node2.value})')
+print(f'Third cut: ({min_cut_res[0][2].node1.value},{min_cut_res[0][2].node2.value})')
