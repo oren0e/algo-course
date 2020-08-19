@@ -18,7 +18,7 @@ class TupleDict(dict):
         return any(key in k for k in self)
 
     def get_keys_from_tup(self, key):
-        for k in self.items():
+        for k in self.keys():
             if all(k1 == k2 or k2 is None for k1, k2 in zip(k, key)):
                 yield k
 
@@ -267,6 +267,22 @@ class Graph:
 
         self.rebuild_graph_edges()
 
+    @staticmethod
+    def _compute_search_dict(dict: TupleDict) -> Dict:
+        '''
+        Structure of search dict is
+        d[node1_value][node2_value][hash]
+        '''
+        d: Dict = {}
+
+        for (hsh, (nd1, nd2)), edge in dict.items():
+            if nd1 not in d:
+                d[nd1]: Dict = {}
+            if nd2 not in d[nd1]:
+                d[nd1][nd2]: Dict = {}
+            d[nd1][nd2][hsh] = edge
+        return d
+
     def rebuild_graph_edges(self) -> None:
         '''
         Clears self loops automatically
@@ -285,16 +301,20 @@ class Graph:
                 keys.remove(key)
                 continue
             try:
-                opposite_keys = list(graph_dict.get_keys_from_tup((None, (nd2_val, nd1_val))))
-                current_keys = list(graph_dict.get_keys_from_tup((None, (nd1_val, nd2_val))))
-                if (len(opposite_keys) > 1) and (key in graph_dict) and (len(current_keys) == 1): #TODO: and if not opposite key is bigger than 1
-                                                                   # otherwise it suggests that the opposite was also
-                                                                   # merged in the process.
+                d: Dict = self._compute_search_dict(graph_dict)
+                try:
+                    opposite_keys: List[int] = [hsh for hsh in d[nd2_val][nd1_val].keys()]
+                    current_keys: List[int] = [hsh for hsh in d[nd1_val][nd2_val].keys()]
+                except KeyError:
+                    continue
+                #opposite_keys = list(graph_dict.get_keys_from_tup((None, (nd2_val, nd1_val))))
+                #current_keys = list(graph_dict.get_keys_from_tup((None, (nd1_val, nd2_val))))
+                if (len(opposite_keys) > 1) and (key in graph_dict) and (len(current_keys) == 1):
                     del graph_dict[key]
                     keys.remove(key)
                 else:
-                    del graph_dict[opposite_keys[0]]
-                    keys.remove(opposite_keys[0])
+                    del graph_dict[(opposite_keys[0], (nd2_val, nd1_val))]
+                    keys.remove((opposite_keys[0], (nd2_val, nd1_val)))
             except IndexError:
                 continue
         self.edge_dict = graph_dict
@@ -321,9 +341,6 @@ def get_cut(g_copy: Graph) -> Tuple[List[Edge], int]:
 
     num_crossings: int = len(g_copy.edge_dict)
     return list(g_copy.edge_dict.values()), num_crossings
-
-def compute_crossings(edge_list: List[Edge], node_list: List[Node]) -> int:
-    pass
 
 def get_min_cut(g_path: str, num_iter: Optional[float] = None) -> Tuple[List[Edge], int]:
     min_cut: Tuple[Optional[List[Edge]], float] = (None, float('inf'))
@@ -372,9 +389,33 @@ def read_input(file: str) -> Graph:
 #cut_res = get_cut(graph_test1)
 
 #min_cut_res = get_min_cut(graph_test1, 100)
+#min_cut_res = get_min_cut('ex4_test_case0.txt', 16)
 min_cut_res = get_min_cut('kargerMinCut.txt', 2)
 print(min_cut_res)
 #print(min_cut_res[1])
 #print(f'First cut: ({min_cut_res[0][0].node1.value},{min_cut_res[0][0].node2.value})')
 #print(f'Second cut: ({min_cut_res[0][1].node1.value},{min_cut_res[0][1].node2.value})')
 #print(f'Third cut: ({min_cut_res[0][2].node1.value},{min_cut_res[0][2].node2.value})')
+
+
+
+# simple test for dict
+import pickle
+with open('example_dict.pickle', 'rb') as f:
+    dict: Dict = pickle.load(f)
+
+d: Dict = {}
+
+for (hsh, (nd1, nd2)), edge in dict.items():
+    if nd1 not in d:
+        d[nd1]: Dict = {}
+    if nd2 not in d[nd1]:
+        d[nd1][nd2]: Dict = {}
+    d[nd1][nd2][hsh] = edge
+
+a: int = 63
+b: int = 183
+lst: List = []
+for c in d[a][b].keys():
+    lst.append(c)
+lst
