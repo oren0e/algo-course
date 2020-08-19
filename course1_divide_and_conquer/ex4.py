@@ -18,7 +18,7 @@ class TupleDict(dict):
         return any(key in k for k in self)
 
     def get_keys_from_tup(self, key):
-        for k, v in self.items():
+        for k in self.items():
             if all(k1 == k2 or k2 is None for k1, k2 in zip(k, key)):
                 yield k
 
@@ -40,9 +40,9 @@ class Edge:
 
 
 class Graph:
-    def __init__(self, nodes: List[Node] = [], edges: List[Edge] = []) -> None:
-        self.nodes = nodes
-        self.edges = edges
+    def __init__(self) -> None:
+        self.nodes: List[Node] = []
+        self.edges: List[Edge] = []
         self.edge_dict: TupleDict[Tuple[int, Tuple[int, int]], Edge] = TupleDict({})
 
     def add_node(self, new_node_val: int) -> None:
@@ -310,8 +310,9 @@ class Graph:
                 self_loops.remove(edge)
 
 
-def get_cut(g: Graph) -> Tuple[List[Edge], int]:
-    g_copy = copy.deepcopy(g)
+def get_cut(g_copy: Graph) -> Tuple[List[Edge], int]:
+    #g_copy = copy.copy(g)
+    #g_copy = copy.deepcopy(g)
     while len(g_copy.nodes) > 2:
         chosen_edge = random.choice(list(g_copy.edge_dict.values()))
         g_copy.fuze_nodes_of_edge(chosen_edge)
@@ -324,16 +325,18 @@ def get_cut(g: Graph) -> Tuple[List[Edge], int]:
 def compute_crossings(edge_list: List[Edge], node_list: List[Node]) -> int:
     pass
 
-def get_min_cut(g: Graph, num_iter: Optional[float] = None) -> Tuple[List[Edge], int]:
+def get_min_cut(g_path: str, num_iter: Optional[float] = None) -> Tuple[List[Edge], int]:
     min_cut: Tuple[Optional[List[Edge]], float] = (None, float('inf'))
-    if num_iter is None:
-        n = len(g.nodes)
-        num_iter: int = int(round(n**2)*log(n))
+    # if num_iter is None:
+    #     n = len(g.nodes)
+    #     num_iter: int = int(round(n**2)*log(n))
 
     for _ in tqdm(range(num_iter), desc='searching for min_cuts'):
+        g = read_input(g_path)
         cut = get_cut(g)
         if cut[1] < min_cut[1]:
             min_cut = cut
+        del g
     return min_cut
 
 
@@ -364,13 +367,14 @@ def read_input(file: str) -> Graph:
 #res = grph.get_adjacency_list()     # res[0] is None. res[1] to res[200] contain the data.
 
 # test cases
-graph_test1 = read_input('ex4_test_case1.txt')
+#graph_test1 = read_input('ex4_test_case1.txt')
 #graph_test1 = read_input('kargerMinCut.txt')
 #cut_res = get_cut(graph_test1)
 
-min_cut_res = get_min_cut(graph_test1, 100)
+#min_cut_res = get_min_cut(graph_test1, 100)
+min_cut_res = get_min_cut('kargerMinCut.txt', 2)
 print(min_cut_res)
 #print(min_cut_res[1])
-print(f'First cut: ({min_cut_res[0][0].node1.value},{min_cut_res[0][0].node2.value})')
-print(f'Second cut: ({min_cut_res[0][1].node1.value},{min_cut_res[0][1].node2.value})')
-print(f'Third cut: ({min_cut_res[0][2].node1.value},{min_cut_res[0][2].node2.value})')
+#print(f'First cut: ({min_cut_res[0][0].node1.value},{min_cut_res[0][0].node2.value})')
+#print(f'Second cut: ({min_cut_res[0][1].node1.value},{min_cut_res[0][1].node2.value})')
+#print(f'Third cut: ({min_cut_res[0][2].node1.value},{min_cut_res[0][2].node2.value})')
