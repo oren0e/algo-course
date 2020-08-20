@@ -428,17 +428,17 @@ min_cut_res = get_min_cut('kargerMinCut.txt', 2)
 #     lst.append(c)
 # lst
 
-d = {(123, (12, 14)): 'a', (149, (12, 16)): 'b', (654, (80, 90)): 'c', (443, (16, 12)): 'd', (109, (12, 14)): 'e'}
-
-a = 12
-b = 16
-lst = []
-for key in d:
-    if re.match(rf'\([0-9]+, \({a}, {b}\)\)', str(key)):
-        lst.append(key[0])
-
-for key in d:
-    print(str(key))
-
-re.match(r'\([0-9]+, \(12, 16\)\)', str((149, (12, 16))))
-re.match(r'\([0-9]+, \(12, 16\)\)', str((149, (12, 16))))
+# d = {(123, (12, 14)): 'a', (149, (12, 16)): 'b', (654, (80, 90)): 'c', (443, (16, 12)): 'd', (109, (12, 14)): 'e'}
+#
+# a = 12
+# b = 16
+# lst = []
+# for key in d:
+#     if re.match(rf'\([0-9]+, \({a}, {b}\)\)', str(key)):
+#         lst.append(key[0])
+#
+# for key in d:
+#     print(str(key))
+#
+# re.match(r'\([0-9]+, \(12, 16\)\)', str((149, (12, 16))))
+# re.match(r'\([0-9]+, \(12, 16\)\)', str((149, (12, 16))))
