@@ -2,9 +2,9 @@ from typing import List, Union, Tuple, Optional, Dict
 
 import re
 
-import copy
+#import copy
 
-from math import log
+#from math import log
 
 from tqdm import tqdm
 
@@ -263,7 +263,8 @@ class Graph:
         try:
             self.nodes.remove(this_edge.node2)
         except Exception as e:
-            print(f'{e.__class__} occured')
+            pass
+            #print(f'{e.__class__} occured')
 
         self.rebuild_graph_edges()
 
@@ -301,10 +302,17 @@ class Graph:
                 keys.remove(key)
                 continue
             try:
-                d: Dict = self._compute_search_dict(graph_dict)
+                #d: Dict = self._compute_search_dict(graph_dict)
                 try:
-                    opposite_keys: List[int] = [hsh for hsh in d[nd2_val][nd1_val].keys()]
-                    current_keys: List[int] = [hsh for hsh in d[nd1_val][nd2_val].keys()]
+                    opposite_keys: List = []
+                    current_keys: List = []
+                    for k in graph_dict:
+                        if re.match(rf'\([0-9]+, \({nd2_val}, {nd1_val}\)\)', str(k)):
+                            opposite_keys.append(k[0])
+                        elif re.match(rf'\([0-9]+, \({nd1_val}, {nd2_val}\)\)', str(k)):
+                            current_keys.append(k[0])
+                    #opposite_keys: List[int] = [hsh for hsh in d[nd2_val][nd1_val].keys()]
+                    #current_keys: List[int] = [hsh for hsh in d[nd1_val][nd2_val].keys()]
                 except KeyError:
                     continue
                 #opposite_keys = list(graph_dict.get_keys_from_tup((None, (nd2_val, nd1_val))))
@@ -391,7 +399,7 @@ def read_input(file: str) -> Graph:
 #min_cut_res = get_min_cut(graph_test1, 100)
 #min_cut_res = get_min_cut('ex4_test_case0.txt', 16)
 min_cut_res = get_min_cut('kargerMinCut.txt', 2)
-print(min_cut_res)
+#print(min_cut_res)
 #print(min_cut_res[1])
 #print(f'First cut: ({min_cut_res[0][0].node1.value},{min_cut_res[0][0].node2.value})')
 #print(f'Second cut: ({min_cut_res[0][1].node1.value},{min_cut_res[0][1].node2.value})')
@@ -400,22 +408,37 @@ print(min_cut_res)
 
 
 # simple test for dict
-import pickle
-with open('example_dict.pickle', 'rb') as f:
-    dict: Dict = pickle.load(f)
+# import pickle
+# with open('example_dict.pickle', 'rb') as f:
+#     dict: Dict = pickle.load(f)
+#
+# d: Dict = {}
+#
+# for (hsh, (nd1, nd2)), edge in dict.items():
+#     if nd1 not in d:
+#         d[nd1]: Dict = {}
+#     if nd2 not in d[nd1]:
+#         d[nd1][nd2]: Dict = {}
+#     d[nd1][nd2][hsh] = edge
+#
+# a: int = 63
+# b: int = 183
+# lst: List = []
+# for c in d[a][b].keys():
+#     lst.append(c)
+# lst
 
-d: Dict = {}
+d = {(123, (12, 14)): 'a', (149, (12, 16)): 'b', (654, (80, 90)): 'c', (443, (16, 12)): 'd', (109, (12, 14)): 'e'}
 
-for (hsh, (nd1, nd2)), edge in dict.items():
-    if nd1 not in d:
-        d[nd1]: Dict = {}
-    if nd2 not in d[nd1]:
-        d[nd1][nd2]: Dict = {}
-    d[nd1][nd2][hsh] = edge
+a = 12
+b = 16
+lst = []
+for key in d:
+    if re.match(rf'\([0-9]+, \({a}, {b}\)\)', str(key)):
+        lst.append(key[0])
 
-a: int = 63
-b: int = 183
-lst: List = []
-for c in d[a][b].keys():
-    lst.append(c)
-lst
+for key in d:
+    print(str(key))
+
+re.match(r'\([0-9]+, \(12, 16\)\)', str((149, (12, 16))))
+re.match(r'\([0-9]+, \(12, 16\)\)', str((149, (12, 16))))
