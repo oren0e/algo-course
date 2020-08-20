@@ -136,3 +136,4 @@ dmypy.json
 # additional files
 .txt
 *.txt
+*.pickle
