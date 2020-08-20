@@ -24,6 +24,15 @@ class Graph:
         pass
     
     def fuze_nodes(self, node1_idx: int, node2_idx: int) -> None:
+        '''
+        The convention will be that the second node
+        gets fuzed.
+        '''
+        # TODO:
+        #       1. remove node2 from the relevant place
+        #       2. remove the opposite
+        #       3. remove other connceted nodes to the fuzed one
+        #       4. eventually when the sublist is empty - remove it.
         pass
     
     def print_adjacency_list(self) -> None:
