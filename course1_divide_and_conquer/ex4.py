@@ -2,6 +2,8 @@ from typing import List, Union, Tuple, Optional, Dict
 
 import re
 
+import numpy as np
+
 #import copy
 
 #from math import log
@@ -288,42 +290,52 @@ class Graph:
         '''
         Clears self loops automatically
         '''
-        graph_dict: TupleDict = TupleDict()
+        #graph_dict: TupleDict = TupleDict()
+        graph_dict: Dict = {}
         for node in self.nodes:
             graph_dict.update(node.edge_dict)
 
         keys = list(graph_dict.keys())
+        dict_np: np.ndarray = np.array(list(graph_dict.keys()))
         for key in keys:
             nd1_val = key[1][0]
             nd2_val = key[1][1]
             # clear self loops
             if nd1_val == nd2_val:  # this is a self loop
+                cond = np.array(list(map(lambda x: x == (nd1_val, nd2_val), dict_np[:, 1])))
+                dict_np: np.ndarray = np.delete(dict_np, (np.where(cond)[0][0]), axis=0)
                 del graph_dict[key]
                 keys.remove(key)
                 continue
             try:
                 #d: Dict = self._compute_search_dict(graph_dict)
-                try:
-                    opposite_keys: List = []
-                    current_keys: List = []
-                    for k in graph_dict:
-                        if re.match(rf'\([0-9]+, \({nd2_val}, {nd1_val}\)\)', str(k)):
-                            opposite_keys.append(k[0])
-                        elif re.match(rf'\([0-9]+, \({nd1_val}, {nd2_val}\)\)', str(k)):
-                            current_keys.append(k[0])
-                    #opposite_keys: List[int] = [hsh for hsh in d[nd2_val][nd1_val].keys()]
-                    #current_keys: List[int] = [hsh for hsh in d[nd1_val][nd2_val].keys()]
-                except KeyError:
-                    continue
+                cond_opposite = np.array(list(map(lambda x: x== (nd2_val, nd1_val), dict_np[:, 1])))
+                cond_current = np.array(list(map(lambda x: x == (nd1_val, nd2_val), dict_np[:, 1])))
+                opposite_keys: List = list(dict_np[np.where(cond_opposite)])
+                current_keys: List = list(dict_np[np.where(cond_current)])
+                # try:
+                #     opposite_keys: List = []
+                #     current_keys: List = []
+                #     for k in graph_dict:
+                #         if re.match(rf'\([0-9]+, \({nd2_val}, {nd1_val}\)\)', str(k)):
+                #             opposite_keys.append(k[0])
+                #         elif re.match(rf'\([0-9]+, \({nd1_val}, {nd2_val}\)\)', str(k)):
+                #             current_keys.append(k[0])
+                #     #opposite_keys: List[int] = [hsh for hsh in d[nd2_val][nd1_val].keys()]
+                #     #current_keys: List[int] = [hsh for hsh in d[nd1_val][nd2_val].keys()]
+                # except KeyError:
+                #     continue
                 #opposite_keys = list(graph_dict.get_keys_from_tup((None, (nd2_val, nd1_val))))
                 #current_keys = list(graph_dict.get_keys_from_tup((None, (nd1_val, nd2_val))))
                 if (len(opposite_keys) > 1) and (key in graph_dict) and (len(current_keys) == 1):
+                    dict_np: np.ndarray = np.delete(dict_np, (np.where(cond_current)[0][0]), axis=0)
                     del graph_dict[key]
                     keys.remove(key)
                 else:
-                    del graph_dict[(opposite_keys[0], (nd2_val, nd1_val))]
-                    keys.remove((opposite_keys[0], (nd2_val, nd1_val)))
-            except IndexError:
+                    del graph_dict[(opposite_keys[0][0], (nd2_val, nd1_val))]
+                    keys.remove((opposite_keys[0][0], (nd2_val, nd1_val)))
+                    dict_np: np.ndarray = np.delete(dict_np, (np.where(cond_opposite)[0][0]), axis=0)
+            except (IndexError, KeyError):
                 continue
         self.edge_dict = graph_dict
 
@@ -442,3 +454,22 @@ min_cut_res = get_min_cut('kargerMinCut.txt', 2)
 #
 # re.match(r'\([0-9]+, \(12, 16\)\)', str((149, (12, 16))))
 # re.match(r'\([0-9]+, \(12, 16\)\)', str((149, (12, 16))))
+#
+
+
+
+# dict_np: np.ndarray = np.array(list(dict.keys()))
+# #arr: np.ndarray = dict_np.values.astype(int)
+# np.where(dict_np[:,1] == tuple((1,164)),dict_np,dict_np)
+# #
+# x = np.array(list(map(lambda x: x== (1, 164), dict_np[:,1])))
+# # len(dict_np[np.where(x)])
+# dict_np[np.where(x)]
+# np.where(x)
+# #
+# dict_np[0] = [111111111, (1, 164)]
+# arr1 = np.delete(dict_np, (np.where(x)[0][0]), axis=0)
+# arr1.shape
+# dict_np.shape
+# x = np.array(list(map(lambda x: x== (1, 164), arr1[:,1])))
+# arr1[np.where(x)]
