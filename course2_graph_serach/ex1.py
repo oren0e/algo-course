@@ -45,8 +45,9 @@ def find_max_node_value(file: str) -> int:
 # TODO: if a value does not appear at all e.g. 1 to 10 except that 4
 #   does not appear, it will be None. This None can interfere, check that out!
 
-def read_input_to_graph(file: str, reversed: bool = False) -> Graph:
+def read_input_to_graph(file: str) -> Tuple[Graph, Graph]:
     output_list: Graph = [None for _ in range(find_max_node_value(file))]
+    output_list_rev = copy.deepcopy(output_list)
     nodes: Dict[int, Node] = {}
     with open(file, 'r') as f:
         for line in f:
@@ -58,61 +59,17 @@ def read_input_to_graph(file: str, reversed: bool = False) -> Graph:
             if dest not in nodes:
                 nodes[dest] = Node(value=dest)
 
-            if reversed:
-                if output_list[dest - 1] is None:
-                    output_list[dest - 1] = nodes[dest]
-                output_list[dest - 1].to_nodes.append(nodes[origin])
-            else:
-                if output_list[origin - 1] is None:
-                    output_list[origin - 1] = nodes[origin]
-                output_list[origin - 1].to_nodes.append(nodes[dest])
-    return output_list
+            # reversed
+            if output_list_rev[dest - 1] is None:
+                output_list_rev[dest - 1] = nodes[dest]
+            output_list_rev[dest - 1].to_nodes.append(nodes[origin])
+            # normal
+            if output_list[origin - 1] is None:
+                output_list[origin - 1] = nodes[origin]
+            output_list[origin - 1].to_nodes.append(nodes[dest])
+    return output_list, output_list_rev
 
-temp = read_input_to_graph('./ex1_test_cases/test1')
-temp_rev = read_input_to_graph('./ex1_test_cases/test1', reversed=True)
-
-# def reverse_graph(g: Graph) -> Graph:
-#     output_list: Graph = [None for _ in range(len(g))]
-#     g1 = copy.deepcopy(g)
-#     for node in g1:
-#         #if not node.been_reversed:
-#         for to_node in node.to_nodes:
-#             if output_list[to_node.value - 1] is None:
-#                 old_to_node_value = to_node.value
-#                 to_node.value = node.value
-#                 output_list[old_to_node_value - 1] = node
-#             else:
-#                 old_to_node_value = to_node.value
-#                 to_node.value = node.value
-#                 output_list[old_to_node_value - 1].to_nodes.append(node)
-#             #node.been_reversed = True
-#     return output_list
-
-def reverse_graph(g: Graph) -> Graph:
-    output_list: Graph = [None for _ in range(len(g))]
-    g1 = copy.deepcopy(g)
-    for node in g1:
-        help_list = []
-        while node.to_nodes:
-            to_node = node.to_nodes.pop()
-            help_list.append(to_node)
-
-        for poped_node in help_list:
-            if output_list[poped_node.value - 1] is None:
-                output_list[poped_node.value - 1] = node
-            else:
-                output_list[poped_node.value - 1].to_nodes.append(node)
-    return output_list
-
-
-
-temp_rev_1: Graph = reverse_graph(temp)
-
-
-
-
-assert temp_rev == temp_rev_1
-
+temp, temp_rev = read_input_to_graph('./ex1_test_cases/test1')
 
 
 
