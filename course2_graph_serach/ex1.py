@@ -12,6 +12,8 @@ from typing import List, Optional, Dict, Tuple
 
 from collections import Counter
 
+import copy
+
 
 class Node:
     def __init__(self, value: int,
@@ -21,6 +23,7 @@ class Node:
         self.seen = seen
         self.leader: Optional[Node] = None
         self.to_nodes: List[Node] = []
+        self.been_reversed: bool = False
 
     def __repr__(self) -> str:
         return repr([node.value for node in self.to_nodes])
@@ -39,6 +42,8 @@ def find_max_node_value(file: str) -> int:
                 max_val = row[1]
     return max_val
 
+# TODO: if a value does not appear at all e.g. 1 to 10 except that 4
+#   does not appear, it will be None. This None can interfere, check that out!
 
 def read_input_to_graph(file: str, reversed: bool = False) -> Graph:
     output_list: Graph = [None for _ in range(find_max_node_value(file))]
@@ -66,6 +71,50 @@ def read_input_to_graph(file: str, reversed: bool = False) -> Graph:
 temp = read_input_to_graph('./ex1_test_cases/test1')
 temp_rev = read_input_to_graph('./ex1_test_cases/test1', reversed=True)
 
+# def reverse_graph(g: Graph) -> Graph:
+#     output_list: Graph = [None for _ in range(len(g))]
+#     g1 = copy.deepcopy(g)
+#     for node in g1:
+#         #if not node.been_reversed:
+#         for to_node in node.to_nodes:
+#             if output_list[to_node.value - 1] is None:
+#                 old_to_node_value = to_node.value
+#                 to_node.value = node.value
+#                 output_list[old_to_node_value - 1] = node
+#             else:
+#                 old_to_node_value = to_node.value
+#                 to_node.value = node.value
+#                 output_list[old_to_node_value - 1].to_nodes.append(node)
+#             #node.been_reversed = True
+#     return output_list
+
+def reverse_graph(g: Graph) -> Graph:
+    output_list: Graph = [None for _ in range(len(g))]
+    g1 = copy.deepcopy(g)
+    for node in g1:
+        help_list = []
+        while node.to_nodes:
+            to_node = node.to_nodes.pop()
+            help_list.append(to_node)
+
+        for poped_node in help_list:
+            if output_list[poped_node.value - 1] is None:
+                output_list[poped_node.value - 1] = node
+            else:
+                output_list[poped_node.value - 1].to_nodes.append(node)
+    return output_list
+
+
+
+temp_rev_1: Graph = reverse_graph(temp)
+
+
+
+
+assert temp_rev == temp_rev_1
+
+
+
 
 def switch_to_finish_times(g: Graph) -> Graph:
     for node in g:
@@ -73,6 +122,8 @@ def switch_to_finish_times(g: Graph) -> Graph:
     return g
 
 def dfs_loop(g: Graph, finish_time_values: bool = False) -> None:
+    if finish_time_values:
+        g = switch_to_finish_times(g)
     global t
     global s
     t = 0
@@ -103,3 +154,5 @@ def get_scc_sizes(g: Graph) -> List[Tuple[int, int]]:
     return Counter(leaders).most_common(5)
 
 # trying
+dfs_loop(temp_rev)
+dfs_loop()
