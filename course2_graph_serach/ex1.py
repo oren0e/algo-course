@@ -67,16 +67,24 @@ class PriorityQueue(Generic[T], list):
 
 Graph = List[Node]
 
-def reverse_graph(g: Graph) -> Graph:
+def reverse_graph(g: Graph, finish_time_values: bool = False) -> Graph:
     reverse_list: List[Union[Node, List]] = [Node(value=-1) for _ in range(len(g))]
     for node in g:
         for to_node in node.to_nodes:
-            reverse_list[to_node.value - 1].to_nodes.append(node)
-            reverse_list[to_node.value - 1].value = to_node.value
-            reverse_list[to_node.value - 1].seen = to_node.seen
-            reverse_list[to_node.value - 1].seen2 = to_node.seen2
-            reverse_list[to_node.value - 1].finish_time = to_node.finish_time
-            reverse_list[to_node.value - 1].leader = to_node.leader
+            if finish_time_values:
+                reverse_list[to_node.value - 1].to_nodes.append(node)
+                reverse_list[to_node.value - 1].value = to_node.finish_time * (-1)
+                reverse_list[to_node.value - 1].seen = to_node.seen
+                reverse_list[to_node.value - 1].seen2 = to_node.seen2
+                reverse_list[to_node.value - 1].finish_time = to_node.finish_time
+                reverse_list[to_node.value - 1].leader = to_node.leader
+            else:
+                reverse_list[to_node.value - 1].to_nodes.append(node)
+                reverse_list[to_node.value - 1].value = to_node.value
+                reverse_list[to_node.value - 1].seen = to_node.seen
+                reverse_list[to_node.value - 1].seen2 = to_node.seen2
+                reverse_list[to_node.value - 1].finish_time = to_node.finish_time
+                reverse_list[to_node.value - 1].leader = to_node.leader
     return reverse_list
 
 
@@ -126,7 +134,7 @@ def max_heap_value(node: Node) -> Node:
     return node
 
 global pq
-pq: PriorityQueue[Node] = PriorityQueue()
+pq = PriorityQueue()
 
 def dfs_loop(g: Graph,
              finish_time_values: bool = False) -> None:
@@ -151,6 +159,8 @@ def dfs(g: Graph, i: Node, second_pass: bool = False) -> None:
     '''
     Depth-first-search
     '''
+    global t
+    global s
     if second_pass:
         i.seen2 = True
         i.leader = s
@@ -176,4 +186,4 @@ def get_scc_sizes(g: Graph) -> List[Tuple[int, int]]:
 
 # trying
 dfs_loop(temp_rev)
-dfs_loop()
+#dfs_loop()
