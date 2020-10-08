@@ -8,25 +8,58 @@ We will have to do the following:
 6. Write the find_scc() mother-function
 '''
 
-from typing import List, Optional, Dict, Tuple
+from __future__ import annotations
+
+from typing import List, Optional, Dict, Tuple, TypeVar, Generic
 
 from collections import Counter
 
+import heapq
+
 import copy
 
+import random
+
+random.seed(1273)
+T = TypeVar('T')
 
 class Node:
-    def __init__(self, value: int,
-                 seen: bool = False) -> None:
+    def __init__(self, value: int) -> None:
         self.value = value
         self.finish_time: Optional[int] = None
-        self.seen = seen
+        self.seen = False
+        self.seen2 = False
         self.leader: Optional[Node] = None
         self.to_nodes: List[Node] = []
-        self.been_reversed: bool = False
+
+    def __lt__(self, other: Node) -> bool:
+        return self.finish_time < other.finish_time
 
     def __repr__(self) -> str:
         return repr([node.value for node in self.to_nodes])
+
+
+class PriorityQueue(Generic[T], list):
+    def __init__(self) -> None:
+        self._data: List[Optional[T]] = []
+        super().__init__()
+
+    @property
+    def is_empty(self) -> bool:
+        return not self._data
+
+    def push(self, v: T) -> None:
+        heapq.heappush(self._data, v)
+
+    def popq(self) -> Optional[T]:
+        if not self.is_empty:
+            return heapq.heappop(self._data)
+        else:
+            return None
+
+    def __repr__(self) -> str:
+        return repr(self._data)
+
 
 
 Graph = List[Node]
@@ -45,9 +78,8 @@ def find_max_node_value(file: str) -> int:
 # TODO: if a value does not appear at all e.g. 1 to 10 except that 4
 #   does not appear, it will be None. This None can interfere, check that out!
 
-def read_input_to_graph(file: str) -> Tuple[Graph, Graph]:
+def read_input_to_graph(file: str, reversed: bool = False) -> Graph:
     output_list: Graph = [None for _ in range(find_max_node_value(file))]
-    output_list_rev = copy.deepcopy(output_list)
     nodes: Dict[int, Node] = {}
     with open(file, 'r') as f:
         for line in f:
@@ -59,49 +91,82 @@ def read_input_to_graph(file: str) -> Tuple[Graph, Graph]:
             if dest not in nodes:
                 nodes[dest] = Node(value=dest)
 
-            # reversed
-            if output_list_rev[dest - 1] is None:
-                output_list_rev[dest - 1] = nodes[dest]
-            output_list_rev[dest - 1].to_nodes.append(nodes[origin])
-            # normal
-            if output_list[origin - 1] is None:
-                output_list[origin - 1] = nodes[origin]
-            output_list[origin - 1].to_nodes.append(nodes[dest])
-    return output_list, output_list_rev
+            if reversed:
+                if output_list[dest - 1] is None:
+                    output_list[dest - 1] = nodes[dest]
+                output_list[dest - 1].to_nodes.append(nodes[origin])
+            else:
+                if output_list[origin - 1] is None:
+                    output_list[origin - 1] = nodes[origin]
+                output_list[origin - 1].to_nodes.append(nodes[dest])
+    return output_list
 
-temp, temp_rev = read_input_to_graph('./ex1_test_cases/test1')
+#temp = read_input_to_graph('./ex1_test_cases/test1')
+temp_rev = read_input_to_graph('./ex1_test_cases/test1', reversed=True)
 
+# TODO: could be inefficient. Check for big graphs
+# def copy_finish_time(g: Graph, g_rev: Graph) -> Graph:
+#     output_list: Graph = [None for _ in range(len(g_rev))]
+#     for node in g_rev:
+#         if node.finish_time is not None:
+#             g[node.value - 1].value = node.finish_time
+#             output_list[g[node.value - 1].value - 1] = g[node.value - 1]
+#     return output_list
+#
+# # testing finish time copying
+# indices = random.sample(range(1, 10), 9)
+# for i in range(9):
+#     temp_rev[i].finish_time = indices[i]
+#     print(f'Node {i} finish time: {indices[i]}')
+#
+# ans = copy_finish_time(temp, temp_rev)
 
+def max_heap_value(node: Node) -> Node:
+    node.finish_time = node.finish_time * (-1)
+    return node
 
-def switch_to_finish_times(g: Graph) -> Graph:
-    for node in g:
-        node.value = node.finish_time
-    return g
+global pq
+pq: PriorityQueue[Node] = PriorityQueue()
 
-def dfs_loop(g: Graph, finish_time_values: bool = False) -> None:
-    if finish_time_values:
-        g = switch_to_finish_times(g)
+def dfs_loop(g: Graph,
+             g_rev: Optional[Graph] = None,
+             finish_time_values: bool = False) -> None:
     global t
     global s
     t = 0
     s = None
     n = len(g)
-    for i in range(n-1, -1, -1):
-        if not g[i].seen:
-            s = i
-            dfs(g, g[i])
+    if finish_time_values:
+        while not pq.is_empty:
+            i = pq.popq()
+            if not i.seen2:
+                s = i
+                dfs(g, i, second_pass=True)
+    else:
+        for i in range(n-1, -1, -1):
+            if not g[i].seen:
+                s = i
+                dfs(g, g[i])
 
-def dfs(g: Graph, i: Node) -> None:
+def dfs(g: Graph, i: Node, second_pass: bool = False) -> None:
     '''
     Depth-first-search
     '''
-    i.seen = True
-    i.leader = g[s]
-    for to_node in i.to_nodes:
-        if not to_node.seen:
-            dfs(g, to_node)
-    t += 1
-    i.finish_time = t
+    if second_pass:
+        i.seen2 = True
+        i.leader = s
+        for to_node in i.to_nodes:
+            if not to_node.seen2:
+                dfs(g, to_node, second_pass=True)
+    else:
+        i.seen = True
+        #i.leader = g[s]
+        for to_node in i.to_nodes:
+            if not to_node.seen:
+                dfs(g, to_node)
+        t += 1
+        i.finish_time = t
+        pq.push(max_heap_value(i))
 
 def get_scc_sizes(g: Graph) -> List[Tuple[int, int]]:
     '''
