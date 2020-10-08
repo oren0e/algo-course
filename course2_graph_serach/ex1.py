@@ -10,7 +10,7 @@ We will have to do the following:
 
 from __future__ import annotations
 
-from typing import List, Optional, Dict, Tuple, TypeVar, Generic
+from typing import List, Optional, Dict, Tuple, TypeVar, Generic, Union
 
 from collections import Counter
 
@@ -36,7 +36,11 @@ class Node:
         return self.finish_time < other.finish_time
 
     def __repr__(self) -> str:
-        return repr([node.value for node in self.to_nodes])
+        return repr(self.value)
+
+    @property
+    def get_to_nodes(self) -> List[int]:
+        return [to_node.value for to_node in self.to_nodes]
 
 
 class PriorityQueue(Generic[T], list):
@@ -61,8 +65,20 @@ class PriorityQueue(Generic[T], list):
         return repr(self._data)
 
 
-
 Graph = List[Node]
+
+def reverse_graph(g: Graph) -> Graph:
+    reverse_list: List[Union[Node, List]] = [Node(value=-1) for _ in range(len(g))]
+    for node in g:
+        for to_node in node.to_nodes:
+            reverse_list[to_node.value - 1].to_nodes.append(node)
+            reverse_list[to_node.value - 1].value = to_node.value
+            reverse_list[to_node.value - 1].seen = to_node.seen
+            reverse_list[to_node.value - 1].seen2 = to_node.seen2
+            reverse_list[to_node.value - 1].finish_time = to_node.finish_time
+            reverse_list[to_node.value - 1].leader = to_node.leader
+    return reverse_list
+
 
 def find_max_node_value(file: str) -> int:
     max_val: int = 0
@@ -101,25 +117,9 @@ def read_input_to_graph(file: str, reversed: bool = False) -> Graph:
                 output_list[origin - 1].to_nodes.append(nodes[dest])
     return output_list
 
-#temp = read_input_to_graph('./ex1_test_cases/test1')
+temp = read_input_to_graph('./ex1_test_cases/test1')
 temp_rev = read_input_to_graph('./ex1_test_cases/test1', reversed=True)
 
-# TODO: could be inefficient. Check for big graphs
-# def copy_finish_time(g: Graph, g_rev: Graph) -> Graph:
-#     output_list: Graph = [None for _ in range(len(g_rev))]
-#     for node in g_rev:
-#         if node.finish_time is not None:
-#             g[node.value - 1].value = node.finish_time
-#             output_list[g[node.value - 1].value - 1] = g[node.value - 1]
-#     return output_list
-#
-# # testing finish time copying
-# indices = random.sample(range(1, 10), 9)
-# for i in range(9):
-#     temp_rev[i].finish_time = indices[i]
-#     print(f'Node {i} finish time: {indices[i]}')
-#
-# ans = copy_finish_time(temp, temp_rev)
 
 def max_heap_value(node: Node) -> Node:
     node.finish_time = node.finish_time * (-1)
@@ -129,7 +129,6 @@ global pq
 pq: PriorityQueue[Node] = PriorityQueue()
 
 def dfs_loop(g: Graph,
-             g_rev: Optional[Graph] = None,
              finish_time_values: bool = False) -> None:
     global t
     global s
@@ -172,7 +171,7 @@ def get_scc_sizes(g: Graph) -> List[Tuple[int, int]]:
     '''
     Returns the 5 largest SCCs (by number of nodes with the same leader)
     '''
-    leaders: [node.leader.value for node in g]
+    leaders = [node.leader.value for node in g]
     return Counter(leaders).most_common(5)
 
 # trying
