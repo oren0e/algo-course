@@ -68,23 +68,19 @@ class PriorityQueue(Generic[T], list):
 Graph = List[Node]
 
 def reverse_graph(g: Graph, finish_time_values: bool = False) -> Graph:
-    reverse_list: List[Union[Node, List]] = [Node(value=-1) for _ in range(len(g))]
+    reverse_list: List[Union[Node, List]] = [Node(value=-(len(g)+1)) for _ in range(len(g))]
     for node in g:
         for to_node in node.to_nodes:
             if finish_time_values:
-                reverse_list[to_node.value - 1].to_nodes.append(node)
                 reverse_list[to_node.value - 1].value = to_node.finish_time * (-1)
-                reverse_list[to_node.value - 1].seen = to_node.seen
-                reverse_list[to_node.value - 1].seen2 = to_node.seen2
-                reverse_list[to_node.value - 1].finish_time = to_node.finish_time
-                reverse_list[to_node.value - 1].leader = to_node.leader
             else:
-                reverse_list[to_node.value - 1].to_nodes.append(node)
                 reverse_list[to_node.value - 1].value = to_node.value
-                reverse_list[to_node.value - 1].seen = to_node.seen
-                reverse_list[to_node.value - 1].seen2 = to_node.seen2
-                reverse_list[to_node.value - 1].finish_time = to_node.finish_time
-                reverse_list[to_node.value - 1].leader = to_node.leader
+
+            reverse_list[to_node.value - 1].to_nodes.append(node)
+            reverse_list[to_node.value - 1].seen = to_node.seen
+            reverse_list[to_node.value - 1].seen2 = to_node.seen2
+            reverse_list[to_node.value - 1].finish_time = to_node.finish_time
+            reverse_list[to_node.value - 1].leader = to_node.leader
     return reverse_list
 
 
@@ -125,11 +121,13 @@ def read_input_to_graph(file: str, reversed: bool = False) -> Graph:
                 output_list[origin - 1].to_nodes.append(nodes[dest])
     return output_list
 
-temp = read_input_to_graph('./ex1_test_cases/test1')
+#temp = read_input_to_graph('./ex1_test_cases/test1')
 temp_rev = read_input_to_graph('./ex1_test_cases/test1', reversed=True)
 
-
+# TODO: the nodes that are in .to_nodes are not changed in this way and that is a problem!
+#       maybe I need to switch from using the priority queue.
 def max_heap_value(node: Node) -> Node:
+    node.value = node.finish_time
     node.finish_time = node.finish_time * (-1)
     return node
 
@@ -146,9 +144,9 @@ def dfs_loop(g: Graph,
     if finish_time_values:
         while not pq.is_empty:
             i = pq.popq()
-            if not i.seen2:
+            if not g[i.value - 1].seen2:
                 s = i
-                dfs(g, i, second_pass=True)
+                dfs(g, g[i.value - 1], second_pass=True)
     else:
         for i in range(n-1, -1, -1):
             if not g[i].seen:
@@ -163,7 +161,7 @@ def dfs(g: Graph, i: Node, second_pass: bool = False) -> None:
     global s
     if second_pass:
         i.seen2 = True
-        i.leader = s
+        i.leader = g[s.value - 1]
         for to_node in i.to_nodes:
             if not to_node.seen2:
                 dfs(g, to_node, second_pass=True)
@@ -186,4 +184,5 @@ def get_scc_sizes(g: Graph) -> List[Tuple[int, int]]:
 
 # trying
 dfs_loop(temp_rev)
-#dfs_loop()
+temp = reverse_graph(temp_rev)
+dfs_loop(temp, finish_time_values=True)
