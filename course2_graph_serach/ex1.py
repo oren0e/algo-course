@@ -30,7 +30,7 @@ class Node:
         self.seen = False
         self.seen2 = False
         self.leader: Optional[Node] = None
-        self.to_nodes: List[Node] = []
+        #self.to_nodes: List[Node] = []
 
     def __lt__(self, other: Node) -> bool:
         return self.finish_time < other.finish_time
@@ -38,9 +38,9 @@ class Node:
     def __repr__(self) -> str:
         return repr(self.value)
 
-    @property
-    def get_to_nodes(self) -> List[int]:
-        return [to_node.value for to_node in self.to_nodes]
+    # @property
+    # def get_to_nodes(self) -> List[int]:
+    #     return [to_node.value for to_node in self.to_nodes]
 
 
 class PriorityQueue(Generic[T], list):
@@ -67,6 +67,47 @@ class PriorityQueue(Generic[T], list):
 
 Graph = List[Node]
 
+
+def find_max_node_value(file: str) -> int:
+    max_val: int = 0
+    with open(file, 'r') as f:
+        for line in f:
+            row: List[int] = [int(item) for item in line.strip().split(' ')]
+            if row[0] > max_val:
+                max_val = row[0]
+            elif row[1] > max_val:
+                max_val = row[1]
+    return max_val
+
+# TODO: if a value does not appear at all e.g. 1 to 10 except that 4
+#   does not appear, it will be None. This None can interfere, check that out!
+
+
+def read_input_to_graph(file: str, reversed: bool = False) -> Tuple[Graph, Graph]:
+    output_list: Graph = [None for _ in range(find_max_node_value(file))]
+    to_nodes: Union[Graph, List[List]] = [[] for _ in range(find_max_node_value(file))]
+    nodes: Dict[int, Node] = {}
+    with open(file, 'r') as f:
+        for line in f:
+            row: List[int] = [int(item) for item in line.strip().split(' ')]
+            origin, dest = row[0], row[1]
+            # build nodes dict
+            if origin not in nodes:
+                nodes[origin] = Node(value=origin)
+            if dest not in nodes:
+                nodes[dest] = Node(value=dest)
+
+            if reversed:
+                if output_list[dest - 1] is None:
+                    output_list[dest - 1] = nodes[dest]
+                to_nodes[dest - 1].append(nodes[origin])
+            else:
+                if output_list[origin - 1] is None:
+                    output_list[origin - 1] = nodes[origin]
+                to_nodes[origin - 1].append(nodes[dest])
+    return output_list, to_nodes
+
+
 def reverse_graph(g: Graph, finish_time_values: bool = False) -> Graph:
     reverse_list: List[Union[Node, List]] = [Node(value=-(len(g)+1)) for _ in range(len(g))]
     for node in g:
@@ -84,45 +125,8 @@ def reverse_graph(g: Graph, finish_time_values: bool = False) -> Graph:
     return reverse_list
 
 
-def find_max_node_value(file: str) -> int:
-    max_val: int = 0
-    with open(file, 'r') as f:
-        for line in f:
-            row: List[int] = [int(item) for item in line.strip().split(' ')]
-            if row[0] > max_val:
-                max_val = row[0]
-            elif row[1] > max_val:
-                max_val = row[1]
-    return max_val
-
-# TODO: if a value does not appear at all e.g. 1 to 10 except that 4
-#   does not appear, it will be None. This None can interfere, check that out!
-
-def read_input_to_graph(file: str, reversed: bool = False) -> Graph:
-    output_list: Graph = [None for _ in range(find_max_node_value(file))]
-    nodes: Dict[int, Node] = {}
-    with open(file, 'r') as f:
-        for line in f:
-            row: List[int] = [int(item) for item in line.strip().split(' ')]
-            origin, dest = row[0], row[1]
-            # build nodes dict
-            if origin not in nodes:
-                nodes[origin] = Node(value=origin)
-            if dest not in nodes:
-                nodes[dest] = Node(value=dest)
-
-            if reversed:
-                if output_list[dest - 1] is None:
-                    output_list[dest - 1] = nodes[dest]
-                output_list[dest - 1].to_nodes.append(nodes[origin])
-            else:
-                if output_list[origin - 1] is None:
-                    output_list[origin - 1] = nodes[origin]
-                output_list[origin - 1].to_nodes.append(nodes[dest])
-    return output_list
-
 #temp = read_input_to_graph('./ex1_test_cases/test1')
-temp_rev = read_input_to_graph('./ex1_test_cases/test1', reversed=True)
+temp_rev, to_nodes_rev = read_input_to_graph('./ex1_test_cases/test1', reversed=True)
 
 # TODO: the nodes that are in .to_nodes are not changed in this way and that is a problem!
 #       maybe I need to switch from using the priority queue.
