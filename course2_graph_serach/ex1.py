@@ -171,13 +171,14 @@ def dfs_loop(g: Graph, to_nodes: List[List[Node]],
     if finish_time_values:
         while not pq.is_empty:
             i = pq.popq()
-            if not g[i.value - 1].seen2:
+            index_i = [item.value for item in g].index(i.value)
+            if not g[index_i].seen2:
                 s = i
-                dfs(g, g[i.value - 1], to_nodes, second_pass=True)
+                dfs(g, g[index_i], to_nodes, second_pass=True)
     else:
         for i in range(n-1, -1, -1):
             if not g[i].seen:
-                s = i + 1
+                #s = i + 1
                 dfs(g, g[i], to_nodes)
 
 def dfs(g: Graph, i: Node, to_nodes: List[List[Node]], second_pass: bool = False) -> None:
@@ -188,13 +189,13 @@ def dfs(g: Graph, i: Node, to_nodes: List[List[Node]], second_pass: bool = False
     global s
     if second_pass:
         i.seen2 = True
-        i.leader = g[s.value - 1]
+        i.leader = s #g[s.value - 1]
         for to_node in to_nodes[i.value - 1]:
             if not to_node.seen2:
                 dfs(g, to_node, to_nodes, second_pass=True)
     else:
         i.seen = True
-        i.leader = g[s - 1]
+        #i.leader = g[s - 1]
         for to_node in to_nodes[i.value - 1]:
             if not to_node.seen:
                 dfs(g, to_node, to_nodes)
