@@ -272,4 +272,4 @@ temp, to_nodes = reverse_graph(temp_rev, to_nodes_rev)
 to_nodes = switch_to_nodes_values(to_nodes, to_nodes_rev)
 dfs_loop(g_graph, to_nodes, finish_time_values=True)
 
-print(get_scc_sizes(temp))
+print(get_scc_sizes(g_graph))
