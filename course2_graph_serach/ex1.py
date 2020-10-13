@@ -39,9 +39,8 @@ class Node:
     def __repr__(self) -> str:
         return repr(self.value)
 
-    # @property
-    # def get_to_nodes(self) -> List[int]:
-    #     return [to_node.value for to_node in self.to_nodes]
+    def __copy__(self) -> Node:
+        return Node(value=self.value)
 
 
 class PriorityQueue(Generic[T], list):
@@ -177,12 +176,14 @@ def max_heap_value(node: Node) -> Node:
 global pq
 pq = PriorityQueue()
 
+
 def switch_to_nodes_values(to_nodes: List[List[Node]],
                            to_nodes_rev: List[List[Node]]) -> List[List[Node]]:
     '''
     Switches the old values to the new finish_time values.
     Also switches the relevant indices in the adjacency list
     '''
+    nodes_copy = {k: v.__copy__() for k, v in nodes.items()}
     missings: List[Tuple[int, List[int]]] = []
     nodes_list: List[List[Node]] = [[] for _ in range(len(to_nodes))]
     for i, item in enumerate(to_nodes_rev):
@@ -190,22 +191,36 @@ def switch_to_nodes_values(to_nodes: List[List[Node]],
             missings.append((i+1, from_to_values[i+1]))
 
     for i, item in enumerate(to_nodes):
-        if not item:    # if no outgoing connections
+        flag: bool = False
+        if (not item): # or missings:    # if no outgoing connections
             val_to_look = None
-            for tup in missings:
+            for j, tup in enumerate(missings):
                 try:
-                    val_in_list = None
-                    val_in_list = tup[1].index(i+1)
-                    if val_in_list is not None:
-                        val_to_look = tup[0]
-                        break
+                    tup[1].index(i+1)
+                    val_to_look = tup[0]
+                    break
                 except ValueError:
-                    continue
+                    flag = True
+                    break
             if (val_to_look is not None) and (val_to_look in old_new_values) and (not nodes[val_to_look].been_switched):
                 nodes[val_to_look].value = old_new_values[val_to_look]
                 nodes[val_to_look].been_switched = True
                 nodes_list[old_new_values[val_to_look] - 1].append(nodes[val_to_look])
-        else:
+                if missings[j][1]:
+                    missings[j][1].remove((i+1))
+                else:
+                    missings.pop()
+            # elif (val_to_look is not None) and (val_to_look in old_new_values) and not case_not_item:
+            #     for value in tup[1]:
+            #         if not nodes_copy[value].been_switched:
+            #             nodes_copy[value].value = old_new_values[value]
+            #             nodes_copy[value].been_switched = True
+            #             nodes_list[old_new_values[value] - 1].append(nodes_copy[value])
+            #             if missings[j][1]:
+            #                 missings[j][1].remove((i + 1))
+            #             else:
+            #                 missings.pop()
+        else: #if flag:
             for to_node in item:
                 if (to_node.value in old_new_values) and (not to_node.been_switched):
                     # TODO: consider assigning entire node and not just its value
@@ -273,6 +288,7 @@ def get_scc_sizes(g: Graph) -> List[Tuple[int, int]]:
 dfs_loop(g_graph, to_nodes_rev)
 temp, to_nodes = reverse_graph(temp_rev, to_nodes_rev)
 to_nodes = switch_to_nodes_values(to_nodes, to_nodes_rev)
-dfs_loop(g_graph, to_nodes, finish_time_values=True)
+g_graph_copy = copy.deepcopy(pq._data)
+dfs_loop(g_graph_copy, to_nodes, finish_time_values=True)
 
 print(get_scc_sizes(g_graph))
