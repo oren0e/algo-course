@@ -107,14 +107,17 @@ def read_input_to_graph(file: str, reversed: bool = False) -> Tuple[Graph, List[
             # build nodes dict
             if origin not in nodes:
                 nodes[origin] = Node(value=origin)
-                from_to_values[origin].append(dest)
             if dest not in nodes:
                 nodes[dest] = Node(value=dest)
+
+            if dest not in from_to_values[origin]:
+                from_to_values[origin].append(dest)
+            if origin not in from_to_values[dest]:
                 from_to_values[dest].append(origin)
 
-            if nodes[origin] not in from_to_nodes:
+            if nodes[dest] not in from_to_nodes[nodes[origin]]:
                 from_to_nodes[nodes[origin]].append(nodes[dest])
-            if nodes[dest] not in from_to_nodes:
+            if nodes[origin] not in from_to_nodes[nodes[dest]]:
                 from_to_nodes[nodes[dest]].append(nodes[origin])
 
             if i not in nodes:  # for omitted cases
@@ -141,7 +144,7 @@ def read_input_to_graph(file: str, reversed: bool = False) -> Tuple[Graph, List[
     return output_list, to_nodes, output_general
 
 #temp = read_input_to_graph('./ex1_test_cases/test1')
-temp_rev, to_nodes_rev, g_graph = read_input_to_graph('./ex1_test_cases/test3', reversed=True)
+temp_rev, to_nodes_rev, g_graph = read_input_to_graph('./ex1_test_cases/test4', reversed=True)
 #temp, to_nodes = reverse_graph(temp_rev, to_nodes_rev)
 
 # TODO: the nodes that are in .to_nodes are not changed in this way and that is a problem!
