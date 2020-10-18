@@ -7,7 +7,7 @@ Implementing the Heap version of Dijkstra's algorithm
 '''
 import heapq
 
-from typing import List, TypeVar, Generic, Optional, Tuple
+from typing import List, TypeVar, Generic, Optional, Tuple, Dict
 
 T = TypeVar('T')
 
@@ -78,4 +78,26 @@ def read_data(file: str) -> WeightedGraph:
 
 
 g: WeightedGraph = read_data('./ex2_test_cases/test1')
+
+def dijkstra(g: WeightedGraph) -> List[int]:
+    '''
+    Returns the shortest-path for every vertex from
+    vertex 1 so e.g., ans[0] = 0
+    '''
+    n = len(g)
+    h: Heap = Heap()
+    x_set: List[int] = [1]
+    v_set: List[int] = [i for i in range(1, n+1)]
+    ans: List[Optional[int]] = [None for _ in range(n)]
+    ans[0] = 0
+    key: List[Optional[int]] = [None for _ in range(n)]
+    vertex_h_pos_map: Dict[int, int] = {}   # map between vertex and its position in the heap
+    v_minus_x = [v for v in v_set if v not in x_set]
+
+    while set(x_set) != set(v_set):
+        for v in v_minus_x:
+            for x_i in x_set:
+                if g[x_i - 1]:
+                    heads_v = min([item for item in g[x_i - 1] if item[0] == v], key=lambda x: x[1])
+
 
