@@ -9,6 +9,8 @@ import heapq
 
 from typing import List, TypeVar, Generic, Optional, Tuple, Dict
 
+import re
+
 T = TypeVar('T')
 
 
@@ -70,9 +72,9 @@ def find_max_node_value(file: str) -> int:
     max_val: int = 0
     with open(file, 'r') as f:
         for i, line in enumerate(f, start=1):
-            row: List[int] = [int(item[0]) for item in line.strip().split(' ')]
-            if row[0] > max_val:
-                max_val = row[0]
+            row: int = int([item for item in re.sub(r'\t', ' ', line.strip()).split(' ')][0])
+            if row > max_val:
+                max_val = row
             #elif row[1] > max_val:
              #   max_val = row[1]
     offset: int = i - max_val
@@ -88,7 +90,7 @@ def read_data(file: str) -> WeightedGraph:
     with open(file, 'r') as f:
         for line in f:
             cell_num = None
-            for i, col in enumerate(line.strip().split(' ')):
+            for i, col in enumerate(re.sub(r'\t', ' ', line.strip()).split(' ')):
                 if i == 0:
                     cell_num = int(col)
                 elif i > 0:
@@ -96,7 +98,7 @@ def read_data(file: str) -> WeightedGraph:
     return data
 
 
-g: WeightedGraph = read_data('./ex2_test_cases/test1')
+g: WeightedGraph = read_data('./ex2_test_cases/test2')
 
 def dijkstra(g: WeightedGraph) -> List[int]:
     '''
@@ -137,7 +139,10 @@ def dijkstra(g: WeightedGraph) -> List[int]:
     return ans
 
 
-print(dijkstra(g))
+ans = dijkstra(g)
+indices = [7, 37, 59, 82, 99, 115, 133, 165, 188, 197]
+print([ans[i] for i in indices])
+#print(dijkstra(g))
 
 '''
 [0, 1, 2, 3, 4, 5, 6, 7]
