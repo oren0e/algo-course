@@ -12,6 +12,25 @@ from typing import List, TypeVar, Generic, Optional, Tuple, Dict
 T = TypeVar('T')
 
 
+class Edge:
+    def __init__(self, value: Tuple[int]) -> None:
+        self.value = value
+
+    def __lt__(self, other) -> bool:
+        return self.value[1] < other.value[1]
+
+    def __repr__(self) -> str:
+        return repr(self.value)
+
+    @property
+    def vertex(self) -> int:
+        return self.value[0]
+
+    @property
+    def vertex_weight(self) -> int:
+        return self.value[1]
+
+
 class Heap(Generic[T]):
     def __init__(self) -> None:
         self._data: List[T] = []
@@ -95,9 +114,25 @@ def dijkstra(g: WeightedGraph) -> List[int]:
     v_minus_x = [v for v in v_set if v not in x_set]
 
     while set(x_set) != set(v_set):
-        for v in v_minus_x:
+        for v in v_minus_x.copy():
+            x_from = None
             for x_i in x_set:
                 if g[x_i - 1]:
-                    heads_v = min([item for item in g[x_i - 1] if item[0] == v], key=lambda x: x[1])
+                    edges = [item for item in g[x_i - 1]] # if item[0] == v]
+                    if edges:
+                        heads_v_min = min(edges, key=lambda x: x[1])
+                        key[heads_v_min[0] - 1] = heads_v_min[1]
+                        h.push(Edge(heads_v_min))
+                        x_from = x_i
+            poped_from_h: Edge = h.pop_heap()
+            x_set.append(poped_from_h.vertex)
+            ans[poped_from_h.vertex - 1] = ans[x_from - 1] + poped_from_h.vertex_weight
+            v_minus_x = [v for v in v_set if v not in x_set]
+    return ans
 
 
+print(dijkstra(g))
+
+'''
+[0, 1, 2, 3, 4, 5, 6, 7]
+'''
