@@ -105,8 +105,8 @@ def read_data(file: str) -> WeightedGraph:
     return data
 
 
-#g: WeightedGraph = read_data('./dijkstraData.txt')
-g: WeightedGraph = read_data('./ex2_test_cases/test2')
+g: WeightedGraph = read_data('./dijkstraData.txt')
+#g: WeightedGraph = read_data('./ex2_test_cases/test2')
 
 def greedy_score(edges: List[Tuple[int, int, int]], ans: List[int]) -> int:
     return min(x[2] + ans[x[0] - 1] for x in edges)
