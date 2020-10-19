@@ -106,7 +106,7 @@ def read_data(file: str) -> WeightedGraph:
 
 
 #g: WeightedGraph = read_data('./dijkstraData.txt')
-g: WeightedGraph = read_data('./ex2_test_cases/test3')
+g: WeightedGraph = read_data('./ex2_test_cases/test2')
 
 def greedy_score(edges: List[Tuple[int, int, int]], ans: List[int]) -> int:
     return min(x[2] + ans[x[0] - 1] for x in edges)
@@ -152,7 +152,7 @@ def dijkstra(g: WeightedGraph) -> Tuple[List[int], List[List[int]]]:
             h.push(Edge(heads_v_min))
             #x_from = x_i
             poped_from_h: Edge = h.pop_heap()
-            print(f'Adding {poped_from_h.vertex} to X')
+            #print(f'Adding {poped_from_h.vertex} to X')
             x_set.append(poped_from_h.vertex)
             # maintain invariant 2
             ans[poped_from_h.vertex - 1] = ans[last_x - 1] + poped_from_h.vertex_weight
@@ -181,7 +181,7 @@ ans, paths = dijkstra(g)
 print(ans, paths)
 
 indices = [7, 37, 59, 82, 99, 115, 133, 165, 188, 197]
-print(','.join([str(ans[i]) for i in indices]))
+print(','.join([str(ans[i-1]) for i in indices]))
 #print(dijkstra(g))
 
 '''
