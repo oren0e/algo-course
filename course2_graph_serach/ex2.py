@@ -21,6 +21,9 @@ class Edge:
     def __lt__(self, other) -> bool:
         return self.value[2] < other.value[2]
 
+    def __eq__(self, other) -> bool:
+        return self.value[2] == other.value[2]
+
     def __repr__(self) -> str:
         return repr(self.value)
 
@@ -108,7 +111,7 @@ g: WeightedGraph = read_data('./ex2_test_cases/test3')
 def greedy_score(edges: List[Tuple[int, int, int]], ans: List[int]) -> int:
     return min(x[2] + ans[x[0] - 1] for x in edges)
 
-def dijkstra(g: WeightedGraph) -> List[int]:
+def dijkstra(g: WeightedGraph) -> Tuple[List[int], List[List[int]]]:
     '''
     Returns the shortest-path for every vertex from
     vertex 1 so e.g., ans[0] = 0
@@ -121,6 +124,7 @@ def dijkstra(g: WeightedGraph) -> List[int]:
     ans[0] = 0
     key: List[Optional[int]] = [None for _ in range(n)]
     key[0] = 0
+    paths = [[] for _ in range(n)]
     vertex_h_pos_map: Dict[int, int] = {}   # map between vertex and its position in the heap
     v_minus_x = [v for v in v_set if v not in x_set]
 
@@ -148,10 +152,18 @@ def dijkstra(g: WeightedGraph) -> List[int]:
             h.push(Edge(heads_v_min))
             #x_from = x_i
             poped_from_h: Edge = h.pop_heap()
+            print(f'Adding {poped_from_h.vertex} to X')
             x_set.append(poped_from_h.vertex)
             # maintain invariant 2
             ans[poped_from_h.vertex - 1] = ans[last_x - 1] + poped_from_h.vertex_weight
             v_minus_x = [v for v in v_set if v not in x_set]
+            if paths[poped_from_h.from_vertex - 1]:
+                if poped_from_h.from_vertex != 1:
+                    paths[poped_from_h.vertex - 1].extend(paths[poped_from_h.from_vertex - 1])
+            else:
+                if poped_from_h.from_vertex != 1:
+                    paths[poped_from_h.vertex - 1].append(poped_from_h.from_vertex)
+            paths[poped_from_h.vertex - 1].append(poped_from_h.vertex)
             for item in g[poped_from_h.vertex - 1]:
                 if item[0] in v_minus_x:
                     if key[item[0] - 1] is not None:
@@ -161,11 +173,13 @@ def dijkstra(g: WeightedGraph) -> List[int]:
 
             #ans[poped_from_h.vertex - 1] = key[poped_from_h.vertex - 1]
 
-    return key
+    return key, paths
     #return ans
 
 
-ans = dijkstra(g)
+ans, paths = dijkstra(g)
+print(ans, paths)
+
 indices = [7, 37, 59, 82, 99, 115, 133, 165, 188, 197]
 print(','.join([str(ans[i]) for i in indices]))
 #print(dijkstra(g))
