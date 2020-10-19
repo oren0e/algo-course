@@ -15,22 +15,26 @@ T = TypeVar('T')
 
 
 class Edge:
-    def __init__(self, value: Tuple[int, int]) -> None:
+    def __init__(self, value: Tuple[int, int, int]) -> None:
         self.value = value
 
     def __lt__(self, other) -> bool:
-        return self.value[1] < other.value[1]
+        return self.value[2] < other.value[2]
 
     def __repr__(self) -> str:
         return repr(self.value)
 
     @property
     def vertex(self) -> int:
-        return self.value[0]
+        return self.value[1]
 
     @property
     def vertex_weight(self) -> int:
-        return self.value[1]
+        return self.value[2]
+
+    @property
+    def from_vertex(self) -> int:
+        return self.value[0]
 
 
 class Heap(Generic[T]):
@@ -98,7 +102,11 @@ def read_data(file: str) -> WeightedGraph:
     return data
 
 
-g: WeightedGraph = read_data('./ex2_test_cases/test2')
+#g: WeightedGraph = read_data('./dijkstraData.txt')
+g: WeightedGraph = read_data('./ex2_test_cases/test3')
+
+def greedy_score(edges: List[Tuple[int, int, int]], ans: List[int]) -> int:
+    return min(x[2] + ans[x[0] - 1] for x in edges)
 
 def dijkstra(g: WeightedGraph) -> List[int]:
     '''
@@ -112,6 +120,7 @@ def dijkstra(g: WeightedGraph) -> List[int]:
     ans: List[Optional[int]] = [None for _ in range(n)]
     ans[0] = 0
     key: List[Optional[int]] = [None for _ in range(n)]
+    key[0] = 0
     vertex_h_pos_map: Dict[int, int] = {}   # map between vertex and its position in the heap
     v_minus_x = [v for v in v_set if v not in x_set]
 
@@ -121,27 +130,44 @@ def dijkstra(g: WeightedGraph) -> List[int]:
         for v in v_minus_x.copy():
             #if g[x_i - 1]:
             #last_x = x_set[-1]
+            # for item in g:
+            #     for sub_item in item:
+            #         if (sub_item[0] in v_minus_x) and (g.index(item) + 1) in x_set:
+            #             h.push(Edge((g.index(item) + 1, sub_item[0], sub_item[1])))
+
             edges = [(g.index(item) + 1, sub_item[0], sub_item[1]) for item in g
                               for sub_item in item
                               if (sub_item[0] in v_minus_x)
                               and (g.index(item) + 1) in x_set]
             #if edges:
             heads_v_min = min(edges, key=lambda x: x[2] + ans[x[0] - 1])
+            key[heads_v_min[1] - 1] = greedy_score(edges, ans)
+            #heads_v_min = h.pop_heap()
             last_x = heads_v_min[0]
-            heads_v_min = (heads_v_min[1], heads_v_min[2])
-            key[heads_v_min[0] - 1] = heads_v_min[1]
+            #heads_v_min = (heads_v_min[1], heads_v_min[2])
             h.push(Edge(heads_v_min))
             #x_from = x_i
             poped_from_h: Edge = h.pop_heap()
             x_set.append(poped_from_h.vertex)
+            # maintain invariant 2
             ans[poped_from_h.vertex - 1] = ans[last_x - 1] + poped_from_h.vertex_weight
             v_minus_x = [v for v in v_set if v not in x_set]
-    return ans
+            for item in g[poped_from_h.vertex - 1]:
+                if item[0] in v_minus_x:
+                    if key[item[0] - 1] is not None:
+                        key[item[0] - 1] = min(key[item[0] - 1], (ans[poped_from_h.vertex - 1] + item[1]))
+                    else:
+                        key[item[0] - 1] = ans[poped_from_h.vertex - 1] + item[1]
+
+            #ans[poped_from_h.vertex - 1] = key[poped_from_h.vertex - 1]
+
+    return key
+    #return ans
 
 
 ans = dijkstra(g)
 indices = [7, 37, 59, 82, 99, 115, 133, 165, 188, 197]
-print([ans[i] for i in indices])
+print(','.join([str(ans[i]) for i in indices]))
 #print(dijkstra(g))
 
 '''
