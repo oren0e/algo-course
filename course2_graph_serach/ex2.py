@@ -13,7 +13,7 @@ T = TypeVar('T')
 
 
 class Edge:
-    def __init__(self, value: Tuple[int]) -> None:
+    def __init__(self, value: Tuple[int, int]) -> None:
         self.value = value
 
     def __lt__(self, other) -> bool:
@@ -114,19 +114,25 @@ def dijkstra(g: WeightedGraph) -> List[int]:
     v_minus_x = [v for v in v_set if v not in x_set]
 
     while set(x_set) != set(v_set):
+        # for x_i in x_set.copy():
+        #     x_from = None
         for v in v_minus_x.copy():
-            x_from = None
-            for x_i in x_set:
-                if g[x_i - 1]:
-                    edges = [item for item in g[x_i - 1]] # if item[0] == v]
-                    if edges:
-                        heads_v_min = min(edges, key=lambda x: x[1])
-                        key[heads_v_min[0] - 1] = heads_v_min[1]
-                        h.push(Edge(heads_v_min))
-                        x_from = x_i
+            #if g[x_i - 1]:
+            #last_x = x_set[-1]
+            edges = [(g.index(item) + 1, sub_item[0], sub_item[1]) for item in g
+                              for sub_item in item
+                              if (sub_item[0] in v_minus_x)
+                              and (g.index(item) + 1) in x_set]
+            #if edges:
+            heads_v_min = min(edges, key=lambda x: x[2] + ans[x[0] - 1])
+            last_x = heads_v_min[0]
+            heads_v_min = (heads_v_min[1], heads_v_min[2])
+            key[heads_v_min[0] - 1] = heads_v_min[1]
+            h.push(Edge(heads_v_min))
+            #x_from = x_i
             poped_from_h: Edge = h.pop_heap()
             x_set.append(poped_from_h.vertex)
-            ans[poped_from_h.vertex - 1] = ans[x_from - 1] + poped_from_h.vertex_weight
+            ans[poped_from_h.vertex - 1] = ans[last_x - 1] + poped_from_h.vertex_weight
             v_minus_x = [v for v in v_set if v not in x_set]
     return ans
 
