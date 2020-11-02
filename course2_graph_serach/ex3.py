@@ -80,10 +80,11 @@ that we've seen so far are all in h_lo, and the largest half of numbers we've se
 so far are all in h_hi.
 '''
 
-with open('./ex3_test_cases/test1', 'r') as f:
+with open('Median.txt', 'r') as f:
     for line in f:
         data.append(int(line.strip()))
 
+# handle first case
 h_hi.push(data[0])
 medians.append(data[0])
 
@@ -98,9 +99,8 @@ for num in data[1:]:
             h_hi.push(h_lo.pop())
         elif len(h_hi) > len(h_lo):
             h_lo.push(h_hi.pop())
-    # median
-    #medians.append(h_lo.peek())
-    if len(h_lo) == len(h_hi):  #i % 2 == 0:  # even (both medians)
+    # median append
+    if len(h_lo) == len(h_hi):
         medians.append(h_lo.peek())
     else:
         if len(h_lo) > len(h_hi):   # odd (whichever has the bigger length (+1 element)
@@ -109,4 +109,5 @@ for num in data[1:]:
             medians.append(h_hi.peek())
 
 #assert sum(medians) % 10000 == 142    # for test0
-assert sum(medians) % 10000 == 9335
+#assert sum(medians) % 10000 == 9335
+print(sum(medians) % 10000)
