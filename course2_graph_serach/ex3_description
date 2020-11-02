@@ -1,0 +1,4 @@
+The goal of this problem is to implement the "Median Maintenance" algorithm (covered in the Week 3 lecture on heap applications).
+The text file contains a list of the integers from 1 to 10000 in unsorted order; you should treat this as a stream of numbers,
+arriving one by one. Letting x_i denote the ith number of the file the kth median m_k
+is defined as the median of the numbers x_1, ... , x_k [The rest is not copied well]
