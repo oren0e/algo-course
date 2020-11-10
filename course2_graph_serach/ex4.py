@@ -1,26 +1,47 @@
-from typing import Dict
+from typing import Dict, List, Callable, Tuple
 
+from collections import defaultdict
+
+from multiprocessing import Pool
+
+from functools import wraps
+
+from timeit import default_timer as timer
 
 file = 'ex4_data.txt'
 t_range = range(-10000, 10001)
 
-data: Dict[int, int] = {}
+data: Dict[int, List[int]] = defaultdict(list)
 
 with open(file, 'r') as f:
     for line in f:
         val = int(line.strip())
-        if val not in data:
-            data[val] = val
+        data[val].append(val)
 
-counter = 0
-for t in t_range:
+def time_func(f: Callable) -> Callable:
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        start = timer()
+        res = f(*args, **kwargs)
+        end = timer()
+        print(f'{f.__name__} took {end - start} seconds, OR, {(end - start) / 60} minutes')
+        return res
+    return wrapper
+
+
+def find_2_sum(target: int) -> bool:
     for key in data.keys():
-        lookup_key = t - key
-        if (lookup_key in data) and (lookup_key != key):
-            counter += 1
-            break
-        else:
-            continue
+        lookup_key = target - key
+        if (data.get(lookup_key) is not None) and (lookup_key != key):
+            return True
 
-print(counter)
 
+@time_func
+def solve_ex4() -> Tuple[int, List[bool]]:
+    pool = Pool()
+    result = pool.map(find_2_sum, t_range)
+    return sum(item for item in result if item is not None), result
+
+
+sum_res, res = solve_ex4()
+print(sum_res)
