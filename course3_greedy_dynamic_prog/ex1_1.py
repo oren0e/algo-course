@@ -7,13 +7,7 @@ class Pair(NamedTuple):
     weight: int
     length: int
     index: int
-
-
-class PairDiff(NamedTuple):
     value: int
-    index: int
-    weight: int
-    length: int
 
     def __lt__(self, other) -> bool:
         return self.value < other.value
@@ -23,73 +17,53 @@ class PairDiff(NamedTuple):
 
 
 data: List[Pair] = []
-num_jobs: int
-
-with open('./ex1_test_cases/ex1_1_test1', 'r') as f:
+with open('./ex1_test_cases/ex1_1_test0', 'r') as f:
     for i, line in enumerate(f):
         if i == 0:
             num_jobs = int(line.strip())
             continue
         data.append(Pair(int(line.strip().split()[0]),
                          int(line.strip().split()[1]),
-                         i - 1))
+                         i - 1, 0))
 
-pairs_dict: Dict[int, Pair] = {}
 
 def pair_with_bigger_weight(pair1: Pair, pair2: Pair) -> Pair:
     if pair1.weight > pair2.weight:
         return pair1
     return pair2
 
-def get_schedule_indices(inputs: List[Pair]) -> Tuple[List[int], List[PairDiff]]:
-    h: List[PairDiff] = []
+def get_scheduled_pairs(inputs: List[Pair]) -> List[Pair]:
+    h: List[Pair] = []  # Heap
+    # calculate difference for each input
     for pair in inputs:
-        item = PairDiff(value=(-1) * (pair.weight - pair.length), index=pair.index,
-                        weight=pair.weight, length=pair.length)
-        pairs_dict[pair.index] = pair
+        item = Pair(pair.weight, pair.length, pair.index, value=(-1) * (pair.weight - pair.length))     # max heap
         heappush(h, item)
 
-    current_length: int = 0
-    res: List[PairDiff] = []
-    indices: List[int] = []
+    current_length = 0
+    res: List[Pair] = []
     while h:
-        poped_item: PairDiff = heappop(h)
-        current_length += poped_item.length
-        new_item = PairDiff(poped_item.value, poped_item.index,
-                            poped_item.weight, length=current_length)
+        popped_item: Pair = heappop(h)
+        current_length += popped_item.length
+        new_item = Pair(popped_item.weight, current_length, popped_item.index, popped_item.value)
         res.append(new_item)
-        indices.append(poped_item.index)
-    return indices, res
+    return res
 
-ordered_indices, new_pairs = get_schedule_indices(data)
-diffs: List[int] = [pairs_dict[idx].weight - pairs_dict[idx].length for idx in ordered_indices]
-total: int = 0
 
-assert len(diffs) == len(ordered_indices)
+ordered_pairs: List[Pair] = get_scheduled_pairs(data)
+total = 0
 
-flag = False
-
-for i, ind in enumerate(ordered_indices):
-    if flag:
-        flag = False
-        continue
+for i, pair in enumerate(ordered_pairs):
     try:
-        next_index: int = ordered_indices[i + 1]
-        if diffs[i] == diffs[i + 1]:
-            chosen_pair: Pair = pair_with_bigger_weight(pairs_dict[ind], pairs_dict[next_index])
+        next_pair: Pair = ordered_pairs[i + 1]
+        if pair.value == next_pair.value:
+            chosen_pair: Pair = pair_with_bigger_weight(pair, next_pair)
             total += chosen_pair.weight * chosen_pair.length
-            flag = True
-            if chosen_pair.index == pairs_dict[ind].index:
-                total += pairs_dict[next_index].weight * pairs_dict[next_index].length
-            else:
-                total += pairs_dict[ind].weight * pairs_dict[ind].length
         else:
-            total += pairs_dict[ind].weight * pairs_dict[ind].length
+            total += pair.weight * pair.length
     except IndexError:
-        continue
+        total += pair.weight * pair.length
 
-# for test0
-#assert total == 1175612
-# for test1
-assert total == 74649
-print(total)
+# test 1
+#assert total == 74649
+# test 0
+assert total == 1175612
