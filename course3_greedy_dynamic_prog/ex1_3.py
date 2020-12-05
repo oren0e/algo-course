@@ -6,6 +6,8 @@ from __future__ import annotations
 from heapq import heappop, heappush
 import heapq
 
+from dataclasses import dataclass, field
+
 from typing import TypeVar, List, Dict, Generic, NamedTuple, Generator, Optional, Union
 
 import random
@@ -46,18 +48,28 @@ class Heap(Generic[T]):
         return repr(self._data)
 
 
-class Vertex(NamedTuple):
-    value: int
-    cost: int
-    in_frontier: List[bool] = [False]   # in X or not, change by x.in_frontier[0] = True
-    key: List[Optional[Union[int, float]]] = [None]   # cheapest edge (cost)
-    key_vertex: List[Optional[Vertex]] = [None]     # the other vertex for the cheapest edge
+
+class Vertex:
+    def __init__(self, value: int, cost: int,
+                 in_frontier: bool = False,
+                 key: Optional[Union[int, float]] = None,
+                 key_vertex: Optional[Vertex] = None) -> None:
+        self.value = value
+        self.cost = cost
+        self.in_frontier = in_frontier   # in X or not
+        self.key = key                   # cheapest edge (cost)
+        self.key_vertex = key_vertex     # the other vertex for the cheapest edge
 
     def __lt__(self, other: Vertex) -> bool:
         return self.cost < other.cost
 
+    def __repr__(self) -> str:
+        return repr(f"Vertex(value={self.value}, cost={self.cost}, "
+                    f"in_frontier={self.in_frontier}, key={self.key}, key_vertex={self.key_vertex})")
+
 
 Graph = List[List[Vertex]]
+
 
 def get_num_verticies(file: str) -> int:
     with open(file, 'r') as f:
@@ -98,31 +110,36 @@ def prim_overall_cost(g: Graph) -> int:
     # choose first vertex randomly
     first_vertex: Vertex = random.choice(g[random.choice(range(len(g)))])
     x.append(first_vertex)
+    first_vertex.in_frontier = True
+    #g[first_vertex.value - 1] = True
     v_minus_x = [v for sub_list in g for v in sub_list if v.value != first_vertex.value]
 
-    def get_key_vertex(v: Vertex, other_vertices: List[Vertex]) -> Vertex:
+    def get_key_vertex(v: Vertex) -> Optional[Vertex]:
         """
         General function to compute the key of a vertex,
         where v is compared to other "many" vertices in 'other_vertices'
         """
-        candidates: List[Vertex] = [vertex for vertex in other_vertices
-                                    if (vertex.cost == min(c.cost for c in other_vertices if c.value == v.value))
-                                    and (vertex.value == v.value)]
-        assert all(candidate.cost == candidates[0].cost for candidate in candidates),\
-                    "Costs not equal in min candidates!"
-        return random.choice(candidates)
+        try:
+            candidate: Vertex = min([vertex for vertex in g[v.value - 1] if vertex.in_frontier], key=lambda x: x.cost)
+            #candidates: List[Vertex] = [vertex for vertex in g[v.value - 1] if vertex.in_frontier]
+        except ValueError:
+            return None
+        # assert all(candidate.cost == candidates[0].cost for candidate in candidates),\
+        #             "Costs not equal in min candidates!"
+        # return random.choice(candidates)
+        return candidate
 
     # initial computation of keys
     h: Heap[Vertex] = Heap()
     vertices_in_heap: Dict[int, int] = {}   # {vertex.value: position_in_heap}
 
     for vertex in v_minus_x:
-        cheapset_vertex = get_key_vertex(vertex, x)
+        cheapset_vertex = get_key_vertex(vertex)
         if cheapset_vertex:
-            vertex.key[0] = cheapset_vertex.cost
-            vertex.key_vertex[0] = cheapset_vertex
+            vertex.key = cheapset_vertex.cost
+            vertex.key_vertex = cheapset_vertex
         else:
-            vertex.key[0] = float("inf")
+            vertex.key = float("inf")
         h.heap_push(vertex)
 
     for i, vertx in enumerate(h._data):
@@ -131,8 +148,9 @@ def prim_overall_cost(g: Graph) -> int:
     while set(x) != set(v_minus_x):
         popped_vertex: Vertex = h.heap_pop()    # v
         x.append(popped_vertex)
+        # TODO: popped_vertex.in_frontier = True
         v_minus_x = [v for sub_list in g for v in sub_list if v.value != popped_vertex.value]
-        # TODO: maintain invariant 2
+        # maintain invariant 2
         popped_vertex_edges: List[Vertex] = g[popped_vertex.value - 1]
         for member_vertex in popped_vertex_edges:
             if member_vertex in v_minus_x:
@@ -147,3 +165,4 @@ def prim_overall_cost(g: Graph) -> int:
 
     return sum(v.cost for v in x)
 
+prim_overall_cost(g)
