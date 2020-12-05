@@ -4,7 +4,7 @@ Prim's minimum spanning tree algorithm
 from heapq import heappop, heappush
 import heapq
 
-from typing import TypeVar, List, Dict, Generic, NamedTuple
+from typing import TypeVar, List, Dict, Generic, NamedTuple, Generator, Optional
 
 T = TypeVar('T')
 
@@ -42,5 +42,31 @@ class Heap(Generic[T]):
 class Vertex(NamedTuple):
     value: int
     cost: int
-    in_frontier: bool = False   # in X or not
+    in_frontier: List[bool] = [False]   # in X or not, change by x.in_frontier[0] = True
+
+
+Graph = List[List[Vertex]]
+
+def get_num_verticies(file: str) -> int:
+    with open(file, 'r') as f:
+        line = f.readline()
+        return int(line.strip().split()[0])
+
+
+def read_data_gen(file: str) -> Generator:
+    with open(file, 'r') as f:
+        for i, line in enumerate(f):
+            if i == 0:
+                continue
+            yield tuple(line.strip().split())
+
+
+def build_graph(file: str) -> Graph:
+    res_list: Graph = [[] for _ in range(get_num_verticies(file))]
+    for tup in read_data_gen(file):
+        res_list[int(tup[0]) - 1].append(Vertex(int(tup[1]), int(tup[2])))      # undirected graph: each edge appears once!
+    return res_list
+
+g: Graph = build_graph('ex1_test_cases/ex1_3_test0')
+
 
