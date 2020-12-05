@@ -6,9 +6,7 @@ from __future__ import annotations
 from heapq import heappop, heappush
 import heapq
 
-from dataclasses import dataclass, field
-
-from typing import TypeVar, List, Dict, Generic, NamedTuple, Generator, Optional, Union
+from typing import TypeVar, List, Dict, Generic, NamedTuple, Generator, Optional, Union, Set
 
 import random
 
@@ -42,7 +40,8 @@ class Heap(Generic[T]):
             if position < len(self._data):
                 heapq._siftup(self._data, position)
                 heapq._siftdown(self._data, 0, position)
-        raise RuntimeError("Empty heap")
+        else:
+            raise RuntimeError("Empty heap")
 
     def __repr__(self) -> str:
         return repr(self._data)
@@ -51,25 +50,25 @@ class Heap(Generic[T]):
 
 class Vertex:
     def __init__(self, value: int, cost: int,
-                 in_frontier: bool = False,
                  key: Optional[Union[int, float]] = None,
                  key_vertex: Optional[Vertex] = None) -> None:
         self.value = value
         self.cost = cost
-        self.in_frontier = in_frontier   # in X or not
+        # self.in_frontier = in_frontier   # in X or not
         self.key = key                   # cheapest edge (cost)
         self.key_vertex = key_vertex     # the other vertex for the cheapest edge
 
     def __lt__(self, other: Vertex) -> bool:
-        return self.cost < other.cost
+        return self.key < other.key
 
     def __repr__(self) -> str:
         return repr(f"Vertex(value={self.value}, cost={self.cost}, "
-                    f"in_frontier={self.in_frontier}, key={self.key}, key_vertex={self.key_vertex})")
+                    f"key={self.key})")
 
 
 Graph = List[List[Vertex]]
-
+frontier: Set[int] = set()          # set of values of vertices
+pushed_to_heap: Set[int] = set()    # set of values of vertices
 
 def get_num_verticies(file: str) -> int:
     with open(file, 'r') as f:
@@ -93,7 +92,7 @@ def build_graph(file: str) -> Graph:
     return res_list
 
 
-g: Graph = build_graph('ex1_test_cases/ex1_3_test0')
+g: Graph = build_graph('ex1_test_cases/ex1_3_test2')
 
 
 def prim_overall_cost(g: Graph) -> int:
@@ -104,14 +103,15 @@ def prim_overall_cost(g: Graph) -> int:
     """
     random.seed(902)
     x: List[Vertex] = []
+    V: Set[int] = set(v for v in range(1, len(g) + 1))      # all vertices values
     # v_minus_x: List[Vertex] = []
-    t: List[Vertex] = []
+    #t: List[Vertex] = []
+
 
     # choose first vertex randomly
     first_vertex: Vertex = random.choice(g[random.choice(range(len(g)))])
     x.append(first_vertex)
-    first_vertex.in_frontier = True
-    #g[first_vertex.value - 1] = True
+    frontier.add(first_vertex.value)
     v_minus_x = [v for sub_list in g for v in sub_list if v.value != first_vertex.value]
 
     def get_key_vertex(v: Vertex) -> Optional[Vertex]:
@@ -120,13 +120,9 @@ def prim_overall_cost(g: Graph) -> int:
         where v is compared to other "many" vertices in 'other_vertices'
         """
         try:
-            candidate: Vertex = min([vertex for vertex in g[v.value - 1] if vertex.in_frontier], key=lambda x: x.cost)
-            #candidates: List[Vertex] = [vertex for vertex in g[v.value - 1] if vertex.in_frontier]
+            candidate: Vertex = min([vertex for vertex in g[v.value - 1] if vertex.value in frontier], key=lambda x: x.cost)
         except ValueError:
             return None
-        # assert all(candidate.cost == candidates[0].cost for candidate in candidates),\
-        #             "Costs not equal in min candidates!"
-        # return random.choice(candidates)
         return candidate
 
     # initial computation of keys
@@ -140,29 +136,36 @@ def prim_overall_cost(g: Graph) -> int:
             vertex.key_vertex = cheapset_vertex
         else:
             vertex.key = float("inf")
-        h.heap_push(vertex)
+        if vertex.value not in pushed_to_heap:
+            h.heap_push(vertex)
+            pushed_to_heap.add(vertex.value)
 
-    for i, vertx in enumerate(h._data):
-        vertices_in_heap[vertx.value] = i
+    def update_mapping() -> None:
+        for i, vertx in enumerate(h._data):
+            vertices_in_heap[vertx.value] = i
+    update_mapping()
 
-    while set(x) != set(v_minus_x):
+    while frontier != V:
         popped_vertex: Vertex = h.heap_pop()    # v
+        update_mapping()
         x.append(popped_vertex)
-        # TODO: popped_vertex.in_frontier = True
+        frontier.add(popped_vertex.value)
         v_minus_x = [v for sub_list in g for v in sub_list if v.value != popped_vertex.value]
         # maintain invariant 2
         popped_vertex_edges: List[Vertex] = g[popped_vertex.value - 1]
         for member_vertex in popped_vertex_edges:
-            if member_vertex in v_minus_x:
+            if member_vertex.value not in frontier:
+                #if not h.is_empty:
                 h.heap_delete(vertices_in_heap[member_vertex.value])
+                update_mapping()
                 # recompute key of w
                 member_vertex.key = min(member_vertex.key, member_vertex.cost)
                 member_vertex.key_vertex = popped_vertex
                 h.heap_push(member_vertex)
                 # update dictionary
-                for i, vertx in enumerate(h._data):
-                    vertices_in_heap[vertx.value] = i
-
-    return sum(v.cost for v in x)
+                update_mapping()
+                #else:
+                #    break
+    return sum(v.key for v in x if v.key)
 
 prim_overall_cost(g)
