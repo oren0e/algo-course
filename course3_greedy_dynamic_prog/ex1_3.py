@@ -1,10 +1,14 @@
 """
 Prim's minimum spanning tree algorithm
 """
+from __future__ import annotations
+
 from heapq import heappop, heappush
 import heapq
 
-from typing import TypeVar, List, Dict, Generic, NamedTuple, Generator, Optional
+from typing import TypeVar, List, Dict, Generic, NamedTuple, Generator, Optional, Union
+
+import random
 
 T = TypeVar('T')
 
@@ -38,11 +42,19 @@ class Heap(Generic[T]):
                 heapq._siftdown(self._data, 0, position)
         raise RuntimeError("Empty heap")
 
+    def __repr__(self) -> str:
+        return repr(self._data)
+
 
 class Vertex(NamedTuple):
     value: int
     cost: int
     in_frontier: List[bool] = [False]   # in X or not, change by x.in_frontier[0] = True
+    key: List[Optional[Union[int, float]]] = [None]   # cheapest edge (cost)
+    key_vertex: List[Optional[Vertex]] = [None]     # the other vertex for the cheapest edge
+
+    def __lt__(self, other: Vertex) -> bool:
+        return self.cost < other.cost
 
 
 Graph = List[List[Vertex]]
@@ -64,9 +76,74 @@ def read_data_gen(file: str) -> Generator:
 def build_graph(file: str) -> Graph:
     res_list: Graph = [[] for _ in range(get_num_verticies(file))]
     for tup in read_data_gen(file):
-        res_list[int(tup[0]) - 1].append(Vertex(int(tup[1]), int(tup[2])))      # undirected graph: each edge appears once!
+        res_list[int(tup[0]) - 1].append(Vertex(int(tup[1]), int(tup[2])))      # undirected graph: each edge appears twice!
+        res_list[int(tup[1]) - 1].append(Vertex(int(tup[0]), int(tup[2])))
     return res_list
+
 
 g: Graph = build_graph('ex1_test_cases/ex1_3_test0')
 
+
+def prim_overall_cost(g: Graph) -> int:
+    """
+    :param g: Adjacency list representing a graph which is List[List[Vertex]].
+              Vertex is a NamedTuple
+    :return: Overall cost of a minimum spanning tree found by the algorithm.
+    """
+    random.seed(902)
+    x: List[Vertex] = []
+    # v_minus_x: List[Vertex] = []
+    t: List[Vertex] = []
+
+    # choose first vertex randomly
+    first_vertex: Vertex = random.choice(g[random.choice(range(len(g)))])
+    x.append(first_vertex)
+    v_minus_x = [v for sub_list in g for v in sub_list if v.value != first_vertex.value]
+
+    def get_key_vertex(v: Vertex, other_vertices: List[Vertex]) -> Vertex:
+        """
+        General function to compute the key of a vertex,
+        where v is compared to other "many" vertices in 'other_vertices'
+        """
+        candidates: List[Vertex] = [vertex for vertex in other_vertices
+                                    if (vertex.cost == min(c.cost for c in other_vertices if c.value == v.value))
+                                    and (vertex.value == v.value)]
+        assert all(candidate.cost == candidates[0].cost for candidate in candidates),\
+                    "Costs not equal in min candidates!"
+        return random.choice(candidates)
+
+    # initial computation of keys
+    h: Heap[Vertex] = Heap()
+    vertices_in_heap: Dict[int, int] = {}   # {vertex.value: position_in_heap}
+
+    for vertex in v_minus_x:
+        cheapset_vertex = get_key_vertex(vertex, x)
+        if cheapset_vertex:
+            vertex.key[0] = cheapset_vertex.cost
+            vertex.key_vertex[0] = cheapset_vertex
+        else:
+            vertex.key[0] = float("inf")
+        h.heap_push(vertex)
+
+    for i, vertx in enumerate(h._data):
+        vertices_in_heap[vertx.value] = i
+
+    while set(x) != set(v_minus_x):
+        popped_vertex: Vertex = h.heap_pop()    # v
+        x.append(popped_vertex)
+        v_minus_x = [v for sub_list in g for v in sub_list if v.value != popped_vertex.value]
+        # TODO: maintain invariant 2
+        popped_vertex_edges: List[Vertex] = g[popped_vertex.value - 1]
+        for member_vertex in popped_vertex_edges:
+            if member_vertex in v_minus_x:
+                h.heap_delete(vertices_in_heap[member_vertex.value])
+                # recompute key of w
+                member_vertex.key = min(member_vertex.key, member_vertex.cost)
+                member_vertex.key_vertex = popped_vertex
+                h.heap_push(member_vertex)
+                # update dictionary
+                for i, vertx in enumerate(h._data):
+                    vertices_in_heap[vertx.value] = i
+
+    return sum(v.cost for v in x)
 
