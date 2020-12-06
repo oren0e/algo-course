@@ -1,4 +1,4 @@
-from typing import NamedTuple, List, Dict, Tuple
+from typing import NamedTuple, List
 
 from heapq import heappush, heappop
 
@@ -17,7 +17,7 @@ class Pair(NamedTuple):
 
 
 data: List[Pair] = []
-with open('./ex1_test_cases/ex1_1_test0', 'r') as f:
+with open('jobs.txt', 'r') as f:
     for i, line in enumerate(f):
         if i == 0:
             num_jobs = int(line.strip())
@@ -66,4 +66,5 @@ for i, pair in enumerate(ordered_pairs):
 # test 1
 #assert total == 72468
 # test 0
-assert total == 1142691
+# assert total == 1142691
+print(total)    # -3612829

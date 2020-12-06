@@ -100,7 +100,7 @@ def build_graph(file: str) -> Graph:
     return res_list
 
 
-g: Graph = build_graph('ex1_test_cases/ex1_3_test0')
+g: Graph = build_graph('edges.txt')
 
 
 def prim_overall_cost(g: Graph) -> int:
@@ -161,4 +161,5 @@ def prim_overall_cost(g: Graph) -> int:
                 update_mapping()
     return sum(v.key for v in x if v.key)
 
-prim_overall_cost(g)
+
+print(prim_overall_cost(g))
