@@ -162,4 +162,4 @@ def prim_overall_cost(g: Graph) -> int:
     return sum(v.key for v in x if v.key)
 
 
-print(prim_overall_cost(g))
+print(prim_overall_cost(g))     # -3612829
