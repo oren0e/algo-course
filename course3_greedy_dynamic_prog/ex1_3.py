@@ -46,24 +46,21 @@ class Heap(Generic[T]):
     def __repr__(self) -> str:
         return repr(self._data)
 
+class Edge(NamedTuple):
+    value: int
 
 
 class Vertex:
-    def __init__(self, value: int, cost: int,
-                 key: Optional[Union[int, float]] = None,
-                 key_vertex: Optional[Vertex] = None) -> None:
+    def __init__(self, value: int, key: Optional[Union[int, float]] = None) -> None:
         self.value = value
-        self.cost = cost
-        # self.in_frontier = in_frontier   # in X or not
         self.key = key                   # cheapest edge (cost)
-        self.key_vertex = key_vertex     # the other vertex for the cheapest edge
+        self.edges: List[Edge] = []
 
     def __lt__(self, other: Vertex) -> bool:
         return self.key < other.key
 
     def __repr__(self) -> str:
-        return repr(f"Vertex(value={self.value}, cost={self.cost}, "
-                    f"key={self.key})")
+        return repr(f"Vertex(value={self.value}, key={self.key}\n Edges: {self.edges})")
 
 
 Graph = List[List[Vertex]]
@@ -86,9 +83,18 @@ def read_data_gen(file: str) -> Generator:
 
 def build_graph(file: str) -> Graph:
     res_list: Graph = [[] for _ in range(get_num_verticies(file))]
+    vertex_dict: Dict[int, Vertex] = {}
     for tup in read_data_gen(file):
-        res_list[int(tup[0]) - 1].append(Vertex(int(tup[1]), int(tup[2])))      # undirected graph: each edge appears twice!
-        res_list[int(tup[1]) - 1].append(Vertex(int(tup[0]), int(tup[2])))
+        edge = Edge(value=int(tup[2]))
+        if int(tup[0]) not in vertex_dict:
+            vertex_dict[int(tup[0])] = Vertex(value=int(tup[0]))
+        if int(tup[1]) not in vertex_dict:
+            vertex_dict[int(tup[1])] = Vertex(value=int(tup[1]))
+
+        vertex_dict[int(tup[0])].edges.append(edge)
+        vertex_dict[int(tup[1])].edges.append(edge)
+        res_list[int(tup[0]) - 1].append(vertex_dict[int(tup[1])])      # undirected graph: each edge appears twice!
+        res_list[int(tup[1]) - 1].append(vertex_dict[int(tup[0])])
     return res_list
 
 
@@ -98,7 +104,6 @@ g: Graph = build_graph('ex1_test_cases/ex1_3_test2')
 def prim_overall_cost(g: Graph) -> int:
     """
     :param g: Adjacency list representing a graph which is List[List[Vertex]].
-              Vertex is a NamedTuple
     :return: Overall cost of a minimum spanning tree found by the algorithm.
     """
     random.seed(902)
