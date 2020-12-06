@@ -12,6 +12,7 @@ import random
 
 T = TypeVar('T')
 
+
 class Heap(Generic[T]):
     def __init__(self) -> None:
         self._data: List[T] = []
@@ -132,8 +133,6 @@ def prim_overall_cost(g: Graph) -> int:
 
     for vertex in v_minus_x:
         vertex.key = compute_key(vertex)
-        # if not vertex.key:
-        #     vertex.key = float("inf")
         if vertex.value not in pushed_to_heap:
             h.heap_push(vertex)
             pushed_to_heap.add(vertex.value)
@@ -149,12 +148,10 @@ def prim_overall_cost(g: Graph) -> int:
         x.append(popped_vertex)
         frontier.add(popped_vertex.value)
         v_minus_x = {v for v in v_minus_x if v.value != popped_vertex.value}
-        #v_minus_x = [v for sub_list in g for v in sub_list if v.value != popped_vertex.value]
         # maintain invariant 2
         popped_vertex_vertices: List[Vertex] = g[popped_vertex.value - 1]
         for member_vertex in popped_vertex_vertices:
             if member_vertex.value not in frontier:
-                #if not h.is_empty:
                 h.heap_delete(vertices_in_heap[member_vertex.value])
                 update_mapping()
                 # recompute key of w
@@ -162,8 +159,6 @@ def prim_overall_cost(g: Graph) -> int:
                 h.heap_push(member_vertex)
                 # update dictionary
                 update_mapping()
-                #else:
-                #    break
     return sum(v.key for v in x if v.key)
 
 prim_overall_cost(g)
